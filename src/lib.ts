@@ -1,11 +1,11 @@
 export function renderBlock (elementId, html) {
   const element = document.getElementById(elementId)
-  element.innerHtml = html
+  element.innerHTML = html
 }
 
 export function renderToast (message, action) {
   let messageText = ''
-  
+
   if (message != null) {
     messageText = `
       <div id="info-block" class="info-block ${message.type}">
@@ -14,7 +14,7 @@ export function renderToast (message, action) {
       </div>
     `
   }
-  
+
   renderBlock(
     'toast-block',
     messageText
@@ -26,7 +26,7 @@ export function renderToast (message, action) {
       if (action != null && action.handler != null) {
         action.handler()
       }
-      renderToast(null)
+      renderToast(null,null)
     }
   }
 }
