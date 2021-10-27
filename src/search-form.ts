@@ -42,7 +42,7 @@ export function renderSearchFormBlock(
   renderBlock(
     'search-form-block',
     `
-    <form>
+    <form id="search-form">
       <fieldset class="search-filedset">
         <div class="row">
           <div>
@@ -69,11 +69,74 @@ export function renderSearchFormBlock(
             <input id="max-price" type="text" value="" name="price" class="max-price" />
           </div>
           <div>
-            <div><button>Найти</button></div>
+            <div><button type="submit">Найти</button></div>
           </div>
         </div>
       </fieldset>
     </form>
     `
   );
+
+  const btnEl: HTMLElement | null = document.getElementById('search-form');
+  if (btnEl instanceof HTMLElement) {
+    btnEl.addEventListener('submit', (evt) => {
+      evt.preventDefault();
+      handleSearchForm();
+    });
+  } else {
+    console.error('search-form element not found');
+  }
+}
+
+interface SearchFormData {
+  city: string;
+  checkInDate: string;
+  checkOutDate: string;
+  maxPrice: number;
+}
+
+function handleSearchForm(): void {
+  const getInputTextValueById: (id: string, defaultValue: string) => string = (
+    id: string,
+    defaultValue: string
+  ) => {
+    const el: HTMLInputElement | null = <HTMLInputElement>(
+      document.getElementById(id)
+    );
+    const result: string = el === null ? defaultValue : el.value;
+    return result;
+  };
+
+  const city: string = getInputTextValueById('city', '');
+  const checkInDate: string = getInputTextValueById('check-in-date', '');
+  const checkOutDate: string = getInputTextValueById('check-out-date', '');
+  const maxPrice = Number(getInputTextValueById('max-price', ''));
+
+  const searchFormData: SearchFormData = {
+    city,
+    checkInDate,
+    checkOutDate,
+    maxPrice,
+  };
+
+  search(searchFormData, (result)=>{
+    console.log('Search result: ', result);
+
+  });
+}
+
+interface Place{
+
+}
+
+function search(searchData: SearchFormData, onComplete: (result: Error|Place[])=>void): void {
+  console.log(searchData);
+  setTimeout(()=>{
+    if (Math.random() > 0.5){
+      onComplete(new Error('Search engine error'));
+    }
+    else{
+      onComplete([]);
+    }
+  }, 3000);
 }

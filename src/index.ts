@@ -1,10 +1,12 @@
 import { renderSearchFormBlock } from './search-form.js';
 import { renderSearchStubBlock } from './search-results.js';
-import { renderUserBlock } from './user.js';
+import { renderUserBlock, getUserData, StorageUserKey, getFavoritesAmount } from './user.js';
 import { renderToast } from './lib.js';
 
 window.addEventListener('DOMContentLoaded', () => {
-  renderUserBlock('Wade Warren', '/img/avatar.png', 1);
+  const userInfo: StorageUserKey = getUserData();
+  const favoritesAmount: number = getFavoritesAmount();
+  renderUserBlock(userInfo.username, userInfo.avatarUrl, favoritesAmount);
   renderSearchFormBlock();
   renderSearchStubBlock();
   renderToast(
