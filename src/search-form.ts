@@ -126,7 +126,13 @@ function handleSearchForm(): void {
 }
 
 interface Place{
-
+  id: number,
+  name: string,
+  description: string,
+  image: string,
+  remoteness: number,
+  bookedDates: string[],
+  price: number
 }
 
 function search(searchData: SearchFormData, onComplete: (result: Error|Place[])=>void): void {
