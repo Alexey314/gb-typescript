@@ -119,30 +119,42 @@ function handleSearchForm(): void {
     maxPrice,
   };
 
-  search(searchFormData, (result)=>{
+  search(searchFormData, (result) => {
     console.log('Search result: ', result);
-
   });
 }
 
-interface Place{
-  id: number,
-  name: string,
-  description: string,
-  image: string,
-  remoteness: number,
-  bookedDates: string[],
-  price: number
+interface Place {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  remoteness: number;
+  bookedDates: string[];
+  price: number;
 }
 
-function search(searchData: SearchFormData, onComplete: (result: Error|Place[])=>void): void {
+function search(
+  searchData: SearchFormData,
+  onComplete: (result: Error | Place[]) => void
+): void {
   console.log(searchData);
-  setTimeout(()=>{
-    if (Math.random() > 0.5){
-      onComplete(new Error('Search engine error'));
-    }
-    else{
-      onComplete([]);
-    }
-  }, 3000);
+  fetch(
+    `http://localhost:3001/places?city=${searchData.city}&checkInDate=${searchData.checkInDate}&checkOutDate=${searchData.checkOutDate}&maxPrice=${searchData.maxPrice}`
+  )
+    .then((response) => {
+      console.log(response);
+      if (response.ok) {
+        return response.json();
+      }
+      throw new Error('Search engine error');
+    })
+    .then((placesObj) => {
+      let places: Place[] = [];
+      for (let key in placesObj) {
+        places.push(placesObj[key]);
+      }
+      onComplete(places);
+    })
+    .catch((error) => onComplete(error));
 }
