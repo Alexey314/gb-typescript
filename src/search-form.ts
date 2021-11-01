@@ -1,4 +1,5 @@
 import { renderBlock } from './lib.js';
+import { renderEmptyOrErrorSearchBlock, renderSearchResultsBlock } from './search-results.js';
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,
@@ -95,6 +96,16 @@ interface SearchFormData {
   maxPrice: number;
 }
 
+export interface Place {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  remoteness: number;
+  bookedDates: string[];
+  price: number;
+}
+
 function handleSearchForm(): void {
   const getInputTextValueById: (id: string, defaultValue: string) => string = (
     id: string,
@@ -119,20 +130,21 @@ function handleSearchForm(): void {
     maxPrice,
   };
 
-  search(searchFormData, (result) => {
+
+  search(searchFormData, (result: unknown) => {
+    if (result instanceof Error)
+    {
+      renderEmptyOrErrorSearchBlock(result.message);
+    }
+    else
+    {
+      renderSearchResultsBlock(result as Place[]);
+    }
     console.log('Search result: ', result);
   });
 }
 
-interface Place {
-  id: number;
-  name: string;
-  description: string;
-  image: string;
-  remoteness: number;
-  bookedDates: string[];
-  price: number;
-}
+
 
 function search(
   searchData: SearchFormData,
