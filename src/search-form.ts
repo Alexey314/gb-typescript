@@ -106,6 +106,8 @@ export interface Place {
   price: number;
 }
 
+export let searchResults: Place[] = [];
+
 function handleSearchForm(): void {
   const getInputTextValueById: (id: string, defaultValue: string) => string = (
     id: string,
@@ -135,10 +137,12 @@ function handleSearchForm(): void {
     if (result instanceof Error)
     {
       renderEmptyOrErrorSearchBlock(result.message);
+      searchResults = [];
     }
     else
     {
       renderSearchResultsBlock(result as Place[]);
+      searchResults = result as Place[];
     }
     console.log('Search result: ', result);
   });

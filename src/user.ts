@@ -53,3 +53,32 @@ export function getFavoritesAmount(): number {
     return 3;
   }
 }
+
+interface FavoriteItem {
+  id: string;
+  name: string;
+  image: string;
+}
+
+function getFavoriteItems(): FavoriteItem[]{
+  const stringifiedItems = localStorage.getItem('favoriteItems');
+  if (stringifiedItems === null){
+    return [];
+  }
+  return JSON.parse(stringifiedItems) || [];
+}
+
+export function toggleFavoriteItem(placeId: string): boolean {
+  const favoriteItems: FavoriteItem[] = getFavoriteItems();
+  const itemIndex = favoriteItems.findIndex((item: FavoriteItem) =>item.id === placeId);
+  if (itemIndex == -1)
+  {
+    //TODO
+    return true;
+  }
+  else
+  {
+    //TODO
+    return false;
+  }
+}
