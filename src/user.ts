@@ -25,3 +25,31 @@ export function renderUserBlock(
     `
   );
 }
+
+export class StorageUserKey {
+  username: string;
+  avatarUrl: string;
+}
+
+export function getUserData(): StorageUserKey {
+  const userInfo: unknown = localStorage.getItem('user');
+
+  if (userInfo instanceof StorageUserKey) {
+    return userInfo;
+  } else {
+    return {
+      username: 'Wade Warren',
+      avatarUrl: '/img/avatar.png',
+    };
+  }
+}
+
+export function getFavoritesAmount(): number {
+  const favoritesAmount: unknown = localStorage.getItem('favoritesAmount');
+
+  if (typeof favoritesAmount === 'number') {
+    return favoritesAmount;
+  } else {
+    return 3;
+  }
+}
