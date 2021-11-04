@@ -48,13 +48,7 @@ export function getUserData(): StorageUserKey {
 }
 
 export function getFavoritesAmount(): number {
-  const favoritesAmount: unknown = localStorage.getItem('favoritesAmount');
-
-  if (typeof favoritesAmount === 'number') {
-    return favoritesAmount;
-  } else {
-    return 3;
-  }
+  return getFavoriteItems().length;
 }
 
 interface FavoriteItem {
