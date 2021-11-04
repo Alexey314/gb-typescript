@@ -35,16 +35,39 @@ export class StorageUserKey {
 }
 
 export function getUserData(): StorageUserKey {
-  const userInfo: unknown = localStorage.getItem('user');
+  const anon: StorageUserKey = {
+    username: 'Anonymous user',
+    avatarUrl: '',
+  };
 
-  if (userInfo instanceof StorageUserKey) {
-    return userInfo;
-  } else {
-    return {
+  const userInfoJson = localStorage.getItem('user');
+
+  try {
+    const userInfo = JSON.parse(userInfoJson);
+    if (
+      typeof userInfo.username == 'string' &&
+      typeof userInfo.avatarUrl == 'string'
+    ) {
+      return userInfo as StorageUserKey;
+    }
+    return anon;
+  } catch (error) {
+    return anon;
+  }
+  /*
+  localStorage.setItem(
+    'user',
+    JSON.stringify({
       username: 'Wade Warren',
       avatarUrl: '/img/avatar.png',
-    };
-  }
+    })
+  );
+
+  localStorage.setItem(
+    'user',
+   0
+  );
+  */
 }
 
 export function getFavoritesAmount(): number {
@@ -65,10 +88,11 @@ export function getFavoriteItems(): FavoriteItem[] {
   return JSON.parse(stringifiedItems) || [];
 }
 
-export function isInFavoriteItems(items: FavoriteItem[], placeId: number): boolean {
-  return items.findIndex(
-    (item: FavoriteItem) => item.id === placeId
-  ) != -1;
+export function isInFavoriteItems(
+  items: FavoriteItem[],
+  placeId: number
+): boolean {
+  return items.findIndex((item: FavoriteItem) => item.id === placeId) != -1;
 }
 
 export function setFavoriteItems(items: FavoriteItem[]): void {
