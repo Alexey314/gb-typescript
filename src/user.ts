@@ -97,6 +97,9 @@ export function isInFavoriteItems(
 
 export function setFavoriteItems(items: FavoriteItem[]): void {
   localStorage.setItem('favoriteItems', items ? JSON.stringify(items) : '');
+  //upsate favorites amount view
+  const userData = getUserData();
+  renderUserBlock(userData.username, userData.avatarUrl, items.length);
 }
 
 export function toggleFavoriteItem(placeId: number): boolean {
