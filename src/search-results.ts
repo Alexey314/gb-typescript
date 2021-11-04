@@ -1,5 +1,6 @@
 import { renderBlock } from './lib.js';
 import { Place } from './search-form';
+import { toggleFavoriteItem, getFavoriteItems, isInFavoriteItems } from './user.js';
 
 export function renderSearchStubBlock() {
   renderBlock(
@@ -26,6 +27,7 @@ export function renderEmptyOrErrorSearchBlock(reasonMessage: string) {
 }
 
 export function renderSearchResultsBlock(places: Place[]) {
+  const favoriteItems = getFavoriteItems();
   renderBlock(
     'search-results-block',
     `
@@ -47,7 +49,7 @@ export function renderSearchResultsBlock(places: Place[]) {
         `<li class="result">
         <div class="result-container">
           <div class="result-img-container">
-            <div class="favorites active" data-place-id="${place.id}""></div>
+            <div class="favorites${isInFavoriteItems(favoriteItems, place.id) ? ' active' : ''} " data-place-id="${place.id}""></div>
             <img class="result-img" src="${place.image}" alt="">
           </div>
           <div class="result-info">
@@ -77,12 +79,12 @@ export function renderSearchResultsBlock(places: Place[]) {
   if (searchResultsBlock) {
     searchResultsBlock.addEventListener(
       'click',
-      handleSearchResultsFavoritesIconClick
+      handleSearchResultsClick
     );
   }
 }
 
-function handleSearchResultsFavoritesIconClick(event: unknown) {
+function handleSearchResultsClick(event: unknown) {
   if (event instanceof PointerEvent)
   {
     const target = event.target as HTMLElement;
@@ -90,7 +92,26 @@ function handleSearchResultsFavoritesIconClick(event: unknown) {
     if ( target.classList.contains('favorites') )
     {
       event.preventDefault();
-      target.classList.toggle('active');
+
+      const placeIdAttr = target.attributes.getNamedItem('data-place-id');
+      if (placeIdAttr === null)
+      {
+        console.error('No data-place-id attribute in search result item favorites icon');
+        return;
+      }
+
+      const placeId = Number(placeIdAttr.value);
+      if (isNaN(placeId))
+      {
+        console.error('data-place-id attribute of search result item is NaN');
+        return;
+      }
+
+      const inFavorites = toggleFavoriteItem(placeId);
+
+      console.log(placeId);
+
+      target.classList.toggle('active', inFavorites);
     }
   }
 }
