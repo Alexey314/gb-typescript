@@ -42,10 +42,12 @@ export function renderSearchResultsBlock(places: Place[]) {
     </div>
     <ul class="results-list">
     ${places.reduce<string>(
-      (prev: string, place: Place) => prev + `<li class="result">
+      (prev: string, place: Place) =>
+        prev +
+        `<li class="result">
         <div class="result-container">
           <div class="result-img-container">
-            <div class="favorites active"></div>
+            <div class="favorites active" data-place-id="${place.id}""></div>
             <img class="result-img" src="${place.image}" alt="">
           </div>
           <div class="result-info">
@@ -69,4 +71,26 @@ export function renderSearchResultsBlock(places: Place[]) {
     </ul>
     `
   );
+
+  const searchResultsBlock = document.getElementById('search-results-block');
+
+  if (searchResultsBlock) {
+    searchResultsBlock.addEventListener(
+      'click',
+      handleSearchResultsFavoritesIconClick
+    );
+  }
+}
+
+function handleSearchResultsFavoritesIconClick(event: unknown) {
+  if (event instanceof PointerEvent)
+  {
+    const target = event.target as HTMLElement;
+    console.log(target);
+    if ( target.classList.contains('favorites') )
+    {
+      event.preventDefault();
+      target.classList.toggle('active');
+    }
+  }
 }
