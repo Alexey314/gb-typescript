@@ -7,7 +7,7 @@ export function renderSearchFormBlock(
 ): void {
   const today = new Date();
 
-  if (arrivalDate === undefined) {
+  if (!arrivalDate) {
     arrivalDate = new Date(new Date().setDate(today.getDate() + 1));
   } else if (arrivalDate.getTime() < today.getTime()) {
     arrivalDate = today;
@@ -23,7 +23,7 @@ export function renderSearchFormBlock(
     ).getDate()
   );
 
-  if (departureDate === undefined) {
+  if (!departureDate) {
     departureDate = new Date(new Date().setDate(arrivalDate.getDate() + 2));
   } else if (departureDate > lastDepartureDate) {
     departureDate = lastDepartureDate;
