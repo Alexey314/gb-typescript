@@ -106,6 +106,7 @@ export interface Place {
   price: number;
 }
 
+export let searchRequest: SearchFormData;
 export let searchResults: Place[] = [];
 
 function handleSearchForm(): void {
@@ -134,6 +135,7 @@ function handleSearchForm(): void {
 
 
   search(searchFormData, (result: unknown) => {
+    searchRequest = searchFormData;
     if (result instanceof Error)
     {
       renderEmptyOrErrorSearchBlock(result.message);
