@@ -1,10 +1,18 @@
 import { renderBlock, renderToast } from './lib.js';
-import { Place, searchRequest, searchResults } from './search-form.js';
+import {
+  handleSearchForm,
+  Place,
+  searchRequest,
+  searchResults,
+  searchResultsTime,
+} from './search-form.js';
 import {
   toggleFavoriteItem,
   getFavoriteItems,
   isInFavoriteItems,
 } from './user.js';
+
+const SEARCH_RESULT_EXPIRATION_TIME = 5 * 60 * 1000;
 
 export function renderSearchStubBlock() {
   renderBlock(
@@ -111,7 +119,7 @@ function getPlaceIdFromHtmlElement(element: HTMLElement): number {
 function handleSearchResultsClick(event: unknown) {
   if (event instanceof PointerEvent) {
     const target = event.target as HTMLElement;
-    console.log(target);
+    // console.log(target);
     if (target.classList.contains('favorites')) {
       event.preventDefault();
 
@@ -122,7 +130,7 @@ function handleSearchResultsClick(event: unknown) {
 
       const inFavorites = toggleFavoriteItem(placeId);
 
-      console.log(placeId);
+      // console.log(placeId);
 
       target.classList.toggle('active', inFavorites);
     } else if (target.attributes.getNamedItem('name')?.value == 'make-order') {
@@ -131,12 +139,25 @@ function handleSearchResultsClick(event: unknown) {
       if (isNaN(placeId)) {
         return;
       }
-      requestBooking(
-        placeId,
-        searchRequest.checkInDate,
-        searchRequest.checkOutDate,
-        onRequestBookingComplete
-      );
+      if (searchResultsTime + SEARCH_RESULT_EXPIRATION_TIME > Date.now()) {
+        requestBooking(
+          placeId,
+          searchRequest.checkInDate,
+          searchRequest.checkOutDate,
+          onRequestBookingComplete
+        );
+      } else {
+        renderToast(
+          {
+            text: 'Данные о бронировании устарели, нужно их обновить.',
+            type: 'error',
+          },
+          {
+            name: 'Обновить',
+            handler: handleSearchForm,
+          }
+        );
+      }
     }
   }
 }
@@ -155,7 +176,7 @@ function requestBooking(
     `http://localhost:3001/booking?placeId=${placeId}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`
   )
     .then<BookingApiResult>((response) => {
-      console.log(response);
+      // console.log(response);
       if (response.ok) {
         return response.json();
       }
@@ -184,7 +205,7 @@ function onRequestBookingComplete(
       {
         name: 'Закрыть',
         handler: () => {
-          console.log('Уведомление закрыто');
+          // console.log('Уведомление закрыто');
         },
       }
     );
@@ -197,7 +218,7 @@ function onRequestBookingComplete(
       {
         name: 'Закрыть',
         handler: () => {
-          console.log('Уведомление закрыто');
+          // console.log('Уведомление закрыто');
         },
       }
     );

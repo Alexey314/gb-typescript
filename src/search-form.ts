@@ -108,8 +108,9 @@ export interface Place {
 
 export let searchRequest: SearchFormData;
 export let searchResults: Place[] = [];
+export let searchResultsTime: number;
 
-function handleSearchForm(): void {
+export function handleSearchForm(): void {
   const getInputTextValueById: (id: string, defaultValue: string) => string = (
     id: string,
     defaultValue: string
@@ -136,6 +137,7 @@ function handleSearchForm(): void {
 
   search(searchFormData, (result: unknown) => {
     searchRequest = searchFormData;
+    searchResultsTime = Date.now();
     if (result instanceof Error)
     {
       renderEmptyOrErrorSearchBlock(result.message);
@@ -146,7 +148,7 @@ function handleSearchForm(): void {
       renderSearchResultsBlock(result as Place[]);
       searchResults = result as Place[];
     }
-    console.log('Search result: ', result);
+    // console.log('Search result: ', result);
   });
 }
 
@@ -156,20 +158,20 @@ function search(
   searchData: SearchFormData,
   onComplete: (result: Error | Place[]) => void
 ): void {
-  console.log(searchData);
+  // console.log(searchData);
   fetch(
     `http://localhost:3001/places?city=${searchData.city}&checkInDate=${searchData.checkInDate}&checkOutDate=${searchData.checkOutDate}&maxPrice=${searchData.maxPrice}`
   )
     .then((response) => {
-      console.log(response);
+      // console.log(response);
       if (response.ok) {
         return response.json();
       }
       throw new Error('Search engine error');
     })
     .then((placesObj) => {
-      let places: Place[] = [];
-      for (let key in placesObj) {
+      const places: Place[] = [];
+      for (const key in placesObj) {
         places.push(placesObj[key]);
       }
       onComplete(places);
