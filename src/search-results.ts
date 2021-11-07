@@ -1,12 +1,15 @@
 import { renderBlock, renderToast } from './lib.js';
 import {
+  parseRentProviderPlaceId,
   RentProviderPlaceId,
+  RentProviders,
   RentSearchResult,
   stringifyRentProviderPlaceId,
 } from './rent-providers.js';
 import {
   handleSearchForm,
   Place,
+  rentProviders,
   searchRequest,
   searchResults,
   searchResultsTime,
@@ -153,13 +156,9 @@ function handleSearchResultsClick(event: unknown) {
         return;
       }
 
-      const rentProviderPlaceId: RentProviderPlaceId = JSON.parse(
-        placeIdString
-      ) as RentProviderPlaceId;
-      if (
-        typeof rentProviderPlaceId.providerId !== 'string' ||
-        typeof rentProviderPlaceId.placeId !== 'string'
-      ) {
+      const rentProviderPlaceId: RentProviderPlaceId =
+        parseRentProviderPlaceId(placeIdString);
+      if (rentProviderPlaceId === null) {
         console.error(
           `Place id in result HTML is bad formatted: ${placeIdString}`
         );
@@ -167,12 +166,42 @@ function handleSearchResultsClick(event: unknown) {
       }
 
       if (searchResultsTime + SEARCH_RESULT_EXPIRATION_TIME > Date.now()) {
-        requestBooking(
-          rentProviderPlaceId,
-          searchRequest.checkInDate,
-          searchRequest.checkOutDate,
-          onRequestBookingComplete
-        );
+        rentProviders
+          .book(
+            rentProviderPlaceId,
+            searchRequest.checkInDate,
+            searchRequest.checkOutDate
+          )
+          .then((transactionId) => {
+            renderToast(
+              {
+                text: `Бронирование выполнено успешно! Идентификатор транзакции '${transactionId.transactionId}'`,
+                type: 'success',
+              },
+              {
+                name: 'Закрыть',
+                handler: () => {
+                  // console.log('Уведомление закрыто');
+                },
+              }
+            );
+          })
+          .catch((error) => {
+            renderToast(
+              {
+                text: `Ошибка, бронирование не выполнено! ${
+                  error instanceof Error ? error.message : ''
+                }`,
+                type: 'error',
+              },
+              {
+                name: 'Закрыть',
+                handler: () => {
+                  // console.log('Уведомление закрыто');
+                },
+              }
+            );
+          });
       } else {
         renderToast(
           {
@@ -186,68 +215,5 @@ function handleSearchResultsClick(event: unknown) {
         );
       }
     }
-  }
-}
-
-interface BookingApiResult {
-  status: string;
-}
-
-function requestBooking(
-  providerPlaceId: RentProviderPlaceId,
-  checkInDate: Date,
-  checkOutDate: Date,
-  onComplete: (result: BookingApiResult, error?: Error) => void
-) {
-  fetch(
-    `http://localhost:3001/booking?placeId=${providerPlaceId.placeId}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`
-  )
-    .then<BookingApiResult>((response) => {
-      // console.log(response);
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error('Booking engine error');
-    })
-    .then<void>((result: BookingApiResult) => {
-      if (typeof result.status === 'string') {
-        onComplete(result);
-      } else {
-        throw new Error('Booking engine result format error');
-      }
-    })
-    .catch((error) => onComplete({ status: 'unknown' }, error));
-}
-
-function onRequestBookingComplete(
-  result: BookingApiResult,
-  error?: Error
-): void {
-  if (result.status === 'OK') {
-    renderToast(
-      {
-        text: 'Бронирование выполнено успешно!',
-        type: 'success',
-      },
-      {
-        name: 'Закрыть',
-        handler: () => {
-          // console.log('Уведомление закрыто');
-        },
-      }
-    );
-  } else if (error) {
-    renderToast(
-      {
-        text: `Ошибка, бронирование не выполнено! ${error.message}`,
-        type: 'error',
-      },
-      {
-        name: 'Закрыть',
-        handler: () => {
-          // console.log('Уведомление закрыто');
-        },
-      }
-    );
   }
 }

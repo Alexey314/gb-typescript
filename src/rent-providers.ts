@@ -139,7 +139,7 @@ class HomyWrapper implements IRentProvider {
     checkInDate: Date,
     checkOutDate: Date
   ): Promise<RentProviderTransactionId> {
-    return null;
+    return Promise.reject(null);
   }
 }
 
@@ -180,11 +180,19 @@ class FlatRentWrapper implements IRentProvider {
     checkInDate: Date,
     checkOutDate: Date
   ): Promise<RentProviderTransactionId> {
-    return null;
+    return flatRentSdk
+      .book(placeId.placeId, checkInDate, checkOutDate)
+      .then<RentProviderTransactionId>((transactionId) => {
+        const rentProviderTransactionId: RentProviderTransactionId = {
+          providerId: placeId.providerId,
+          transactionId: transactionId.toString(),
+        };
+        return rentProviderTransactionId;
+      });
   }
 }
 
-function createProvider(providerId: RentProviderId): HomyWrapper | null {
+function createProvider(providerId: RentProviderId): IRentProvider | null {
   switch (providerId) {
     case HomyWrapper.providerId:
       return new HomyWrapper();
@@ -214,9 +222,16 @@ export class RentProviders implements IRentProvider {
       }
     );
   }
-  book: (
+
+  book(
     placeId: RentProviderPlaceId,
     checkInDate: Date,
     checkOutDate: Date
-  ) => Promise<RentProviderTransactionId>;
+  ): Promise<RentProviderTransactionId> {
+    const provider = createProvider(placeId.providerId);
+    if (provider === null) {
+      return Promise.reject(new Error('Unsupported provider'));
+    }
+    return provider.book(placeId, checkInDate, checkOutDate);
+  }
 }

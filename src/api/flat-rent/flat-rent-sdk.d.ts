@@ -25,7 +25,7 @@ export class FlatRentSdk {
   search: (parameters: FlatRentSearchInfo) => Promise<FlatRentSearchResult[]>;
 
   book: (
-    flatId: number,
+    flatId: string,
     checkInDate: Date,
     checkOutDate: Date
   ) => Promise<FlatRentTransactionId>;

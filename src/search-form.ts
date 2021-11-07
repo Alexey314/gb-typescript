@@ -11,7 +11,7 @@ import {
   renderSearchResultsBlock,
 } from './search-results.js';
 
-const rentProviders: RentProviders = new RentProviders();
+export const rentProviders: RentProviders = new RentProviders();
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,
