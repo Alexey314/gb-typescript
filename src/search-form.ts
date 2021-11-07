@@ -1,5 +1,10 @@
+import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
 import { renderBlock } from './lib.js';
 import { renderEmptyOrErrorSearchBlock, renderSearchResultsBlock } from './search-results.js';
+
+const flatRentSdk = new FlatRentSdk();
+
+flatRentSdk.book(0, new Date(), new Date());
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,

@@ -1,0 +1,7 @@
+{
+  "name": "geekbrains-flat-rent-sdk",
+  "version": "1.0.0",
+  "main": "flat-rent-sdk.js",
+  "type": "module",
+  "types": "types/flat-rent-sdk.d.ts"
+}

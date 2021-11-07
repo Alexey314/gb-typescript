@@ -1,5 +1,3 @@
-declare module 'flat-rent-sdk' {
-
 //   type DbItem = {
 //     id: string;
 //     title: string;
@@ -78,4 +76,3 @@ declare module 'flat-rent-sdk' {
 
     // _syncDatabase: (database: DbItem[]) => void;
   }
-}
