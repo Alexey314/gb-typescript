@@ -1,10 +1,11 @@
 import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
 import { renderBlock } from './lib.js';
-import { renderEmptyOrErrorSearchBlock, renderSearchResultsBlock } from './search-results.js';
+import {
+  renderEmptyOrErrorSearchBlock,
+  renderSearchResultsBlock,
+} from './search-results.js';
 
 const flatRentSdk = new FlatRentSdk();
-
-flatRentSdk.book(0, new Date(), new Date());
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,
@@ -56,10 +57,10 @@ export function renderSearchFormBlock(
             <input id="city" type="text" disabled value="Санкт-Петербург" />
             <input type="hidden" disabled value="59.9386,30.3141" />
           </div>
-          <!--<div class="providers">
+          <div class="providers">
             <label><input type="checkbox" name="provider" value="homy" checked /> Homy</label>
             <label><input type="checkbox" name="provider" value="flat-rent" checked /> FlatRent</label>
-          </div>--!>
+          </div>
         </div>
         <div class="row">
           <div>
@@ -127,10 +128,27 @@ export function handleSearchForm(): void {
     return result;
   };
 
+  const getSelectedProviders: () => string[] = () => {
+    const checkboxList: NodeListOf<Element> = document.querySelectorAll(
+      '#search-form .providers input[name="provider"]'
+    );
+
+    const result: string[] = [];
+    checkboxList.forEach((node) => {
+      if ((node as HTMLInputElement).checked) {
+        result.push((node as HTMLInputElement).value);
+      }
+    });
+
+    return result;
+  };
+
   const city: string = getInputTextValueById('city', '');
   const checkInDate: string = getInputTextValueById('check-in-date', '');
   const checkOutDate: string = getInputTextValueById('check-out-date', '');
   const maxPrice = Number(getInputTextValueById('max-price', ''));
+  const selectedProviders: string[] = getSelectedProviders();
+  console.log(selectedProviders);
 
   const searchFormData: SearchFormData = {
     city,
@@ -139,25 +157,19 @@ export function handleSearchForm(): void {
     maxPrice,
   };
 
-
   search(searchFormData, (result: unknown) => {
     searchRequest = searchFormData;
     searchResultsTime = Date.now();
-    if (result instanceof Error)
-    {
+    if (result instanceof Error) {
       renderEmptyOrErrorSearchBlock(result.message);
       searchResults = [];
-    }
-    else
-    {
+    } else {
       renderSearchResultsBlock(result as Place[]);
       searchResults = result as Place[];
     }
     // console.log('Search result: ', result);
   });
 }
-
-
 
 function search(
   searchData: SearchFormData,
