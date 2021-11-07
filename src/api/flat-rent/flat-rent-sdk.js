@@ -60,7 +60,7 @@ export class FlatRentSdk {
 
     /**
      * Get flat by ID.
-     * 
+     *
      * @param {string} id Flat ID.
      * @returns {Promise<Object|null>} Flat.
      */
@@ -74,7 +74,7 @@ export class FlatRentSdk {
 
     /**
      * Search for flats.
-     * 
+     *
      * @param {Object} parameters Search parameters
      * @param {string}parameters.city City name
      * @param {Date} parameters.checkInDate Check-in date
@@ -97,20 +97,20 @@ export class FlatRentSdk {
                 if (parameters.priceLimit != null && (isNaN(parameters.priceLimit) || !isFinite(parameters.priceLimit))) {
                     throw new Error(`Passed invalid price limit - "${parameters.priceLimit}".`)
                 }
-        
+
                 let flats = this.database
-        
-                if (parameters.priceLimit != null) {
-                    flats = flats.filter((flat) => {
-                        return flat.price <= parameters.priceLimit
-                    })
-                }
-        
+
+                // if (parameters.priceLimit != null) {
+                //     flats = flats.filter((flat) => {
+                //         return flat.price <= parameters.priceLimit
+                //     })
+                // }
+
                 const dateRange = this._generateDateRange(parameters.checkInDate, parameters.checkOutDate)
-                flats = flats.filter((flat) => {
-                    return this._areAllDatesAvailable(flat, dateRange)
-                })
-        
+                // flats = flats.filter((flat) => {
+                //     return this._areAllDatesAvailable(flat, dateRange)
+                // })
+
                 flats = flats.map((flat) => {
                    return this._formatFlatObject(flat, dateRange.length - 1)
                 })
@@ -124,9 +124,9 @@ export class FlatRentSdk {
 
     /**
      * Book flat.
-     * 
-     * @param {number} flatId 
-     * @param {Date} checkInDate 
+     *
+     * @param {number} flatId
+     * @param {Date} checkInDate
      * @param {Date} checkOutDate
      * @returns {number}
      */
@@ -136,17 +136,17 @@ export class FlatRentSdk {
                 const flat = this.database.find((item) => {
                     return item.id === flatId
                 })
-        
+
                 if (flat == null) {
                     throw new Error('There is no flat with ID "' + flatId + '".')
                 }
                 this._assertDatesAreCorrect(checkInDate, checkOutDate)
-        
+
                 const datesToBook = this._generateDateRange(checkInDate, checkOutDate)
                 if (!this._areAllDatesAvailable(flat, datesToBook)) {
                     throw new Error(`Flat ${flat.id} is not available for dates ${datesToBook.join(",")}.`)
                 }
-        
+
                 const bookedDates = datesToBook.map((date) => {
                     return date.getTime()
                 })
@@ -158,7 +158,7 @@ export class FlatRentSdk {
                     }
                 }
                 this._writeDatabase(this.database)
-        
+
                 resolve(this._generateTransactionId())
             } catch (error) {
                 reject(error)
@@ -199,12 +199,12 @@ export class FlatRentSdk {
     _generateDateRange(from, to) {
         const dates = []
         const differenceInDays = this._calculateDifferenceInDays(from, to)
-        
+
         dates.push(new Date(from.getFullYear(), from.getMonth(), from.getDate()))
         for (let i = 1; i <= differenceInDays; i++) {
           dates.push(new Date(from.getFullYear(), from.getMonth(), from.getDate() + i))
         }
-    
+
         return dates
     }
 
@@ -212,7 +212,7 @@ export class FlatRentSdk {
         const min = 1000
         const max = 9999
         const num = Math.random() * (max - min) + min
-    
+
         return Math.floor(num)
     }
 

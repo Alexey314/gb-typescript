@@ -65,7 +65,7 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
             <div class="favorites${
               isInFavoriteItems(favoriteItems, place.providerPlaceId.placeId) ? ' active' : ''
             } " data-place-id="${place.providerPlaceId.placeId}""></div>
-            <img class="result-img" src="${place.image}" alt="">
+            <img class="result-img" src="${place.image[0]}" alt="">
           </div>
           <div class="result-info">
             <div class="result-info--header">

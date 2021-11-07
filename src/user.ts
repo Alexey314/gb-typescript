@@ -118,7 +118,7 @@ export function toggleFavoriteItem(placeId: string): boolean {
       const newFavItem: FavoriteItem = {
         id: searchResultsItem.providerPlaceId.placeId,
         name: searchResultsItem.name,
-        image: searchResultsItem.image,
+        image: searchResultsItem.image[0],
       };
       favoriteItems.push(newFavItem);
       setFavoriteItems(favoriteItems);
