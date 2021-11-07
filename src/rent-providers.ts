@@ -16,12 +16,66 @@ export type RentSearchInfo = {
   providerIds: string[];
 };
 
-export type ProviderId = string;
+export type RentProviderId = string;
 
 export type RentProviderPlaceId = {
-  providerId: ProviderId;
+  providerId: RentProviderId;
   placeId: string;
 };
+
+function b64EncodeUnicode(str: string) {
+  // first we use encodeURIComponent to get percent-encoded UTF-8,
+  // then we convert the percent encodings into raw bytes which
+  // can be fed into btoa.
+  return btoa(
+    encodeURIComponent(str).replace(
+      /%([0-9A-F]{2})/g,
+      function toSolidBytes(match, p1: string) {
+        return String.fromCharCode(parseInt('0x' + p1));
+      }
+    )
+  );
+}
+
+function b64DecodeUnicode(str: string) {
+  // Going backwards: from bytestream, to percent-encoding, to original string.
+  return decodeURIComponent(
+    atob(str)
+      .split('')
+      .map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join('')
+  );
+}
+
+export function stringifyRentProviderPlaceId(
+  placeInfo: RentSearchResult | RentProviderPlaceId
+): string {
+  if (placeInfo.hasOwnProperty('providerPlaceId')) {
+    return b64EncodeUnicode(
+      JSON.stringify((placeInfo as RentSearchResult).providerPlaceId)
+    );
+  } else {
+    return JSON.stringify(placeInfo as RentProviderPlaceId);
+  }
+}
+
+export function parseRentProviderPlaceId(
+  stringToParse: string
+): RentProviderPlaceId | null {
+  try {
+    const obj = JSON.parse(b64DecodeUnicode(stringToParse));
+    if (obj.hasOwnProperty('providerId') && obj.hasOwnProperty('placeId')) {
+      return obj as RentProviderPlaceId;
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
+  }
+  return null;
+}
 
 export type RentSearchResult = {
   providerPlaceId: RentProviderPlaceId;
@@ -35,7 +89,7 @@ export type RentSearchResult = {
 };
 
 export type RentProviderTransactionId = {
-  providerId: ProviderId;
+  providerId: RentProviderId;
   transactionId: string;
 };
 
@@ -49,7 +103,7 @@ export interface IRentProvider {
 }
 
 class HomyWrapper implements IRentProvider {
-  static readonly providerId: ProviderId = 'homy';
+  static readonly providerId: RentProviderId = 'homy';
   search(parameters: RentSearchInfo) {
     const homySearchInfo: HomySearchInfo = {
       city: parameters.city,
@@ -90,7 +144,7 @@ class HomyWrapper implements IRentProvider {
 }
 
 class FlatRentWrapper implements IRentProvider {
-  static readonly providerId: ProviderId = 'flat-rent';
+  static readonly providerId: RentProviderId = 'flat-rent';
   search(parameters: RentSearchInfo) {
     const flatRentSearchInfo: FlatRentSearchInfo = {
       city: parameters.city,
@@ -130,7 +184,7 @@ class FlatRentWrapper implements IRentProvider {
   }
 }
 
-function createProvider(providerId: ProviderId): HomyWrapper | null {
+function createProvider(providerId: RentProviderId): HomyWrapper | null {
   switch (providerId) {
     case HomyWrapper.providerId:
       return new HomyWrapper();

@@ -1,5 +1,9 @@
 import { renderBlock } from './lib.js';
-import { RentSearchResult } from './rent-providers.js';
+import {
+  parseRentProviderPlaceId,
+  RentProviderPlaceId,
+  RentSearchResult,
+} from './rent-providers.js';
 import { Place, searchResults } from './search-form.js';
 
 export function renderUserBlock(
@@ -109,14 +113,22 @@ export function toggleFavoriteItem(placeId: string): boolean {
     (item: FavoriteItem) => item.id === placeId
   );
 
+  const providerPlaceId = parseRentProviderPlaceId(placeId);
+
   if (favoriteItemsIndex == -1) {
+    if (providerPlaceId === null) {
+      return false;
+    }
+
     const searchResultsItem = searchResults.find(
-      (item: RentSearchResult) => item.providerPlaceId.placeId === placeId
+      (item: RentSearchResult) =>
+        item.providerPlaceId.placeId === providerPlaceId.placeId &&
+        item.providerPlaceId.providerId === providerPlaceId.providerId
     );
 
     if (searchResultsItem) {
       const newFavItem: FavoriteItem = {
-        id: searchResultsItem.providerPlaceId.placeId,
+        id: placeId,
         name: searchResultsItem.name,
         image: searchResultsItem.image[0],
       };

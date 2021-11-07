@@ -1,5 +1,9 @@
 import { renderBlock, renderToast } from './lib.js';
-import { RentSearchResult } from './rent-providers.js';
+import {
+  RentProviderPlaceId,
+  RentSearchResult,
+  stringifyRentProviderPlaceId,
+} from './rent-providers.js';
 import {
   handleSearchForm,
   Place,
@@ -41,7 +45,7 @@ export function renderEmptyOrErrorSearchBlock(reasonMessage: string) {
 
 export function renderSearchResultsBlock(places: RentSearchResult[]) {
   const favoriteItems = getFavoriteItems();
-  const getLocationHTML = (place: RentSearchResult) => {
+  const getLocationHTML = (place: RentSearchResult): string => {
     if (place.remoteness != null) {
       return `${place.remoteness} км от вас`;
     }
@@ -68,17 +72,16 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
         </div>
     </div>
     <ul class="results-list">
-    ${places.reduce<string>(
-      (prev: string, place: RentSearchResult) =>
+    ${places.reduce<string>((prev: string, place: RentSearchResult) => {
+      const placeIdString = stringifyRentProviderPlaceId(place);
+      return (
         prev +
         `<li class="result">
         <div class="result-container">
           <div class="result-img-container">
             <div class="favorites${
-              isInFavoriteItems(favoriteItems, place.providerPlaceId.placeId)
-                ? ' active'
-                : ''
-            } " data-place-id="${place.providerPlaceId.placeId}""></div>
+              isInFavoriteItems(favoriteItems, placeIdString) ? ' active' : ''
+            } " data-place-id="${placeIdString}""></div>
             <img class="result-img" src="${place.image[0]}" alt="">
           </div>
           <div class="result-info">
@@ -91,16 +94,17 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
             <div class="result-info--descr">${place.description}</div>
             <div class="result-info--footer">
               <div>
-                <button name="make-order" data-place-id="${
-                  place.providerPlaceId.placeId
-                }">Забронировать</button>
+                <button name="make-order"
+                  data-place-id="${placeIdString}">
+                Забронировать
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </li>\n`,
-      ''
-    )}
+      </li>\n`
+      );
+    }, '')}
 
     </ul>
     `
@@ -144,17 +148,31 @@ function handleSearchResultsClick(event: unknown) {
       target.classList.toggle('active', inFavorites);
     } else if (target.attributes.getNamedItem('name')?.value == 'make-order') {
       event.preventDefault();
-      const placeId = getPlaceIdFromHtmlElement(target);
-      if (!placeId) {
+      const placeIdString = getPlaceIdFromHtmlElement(target);
+      if (!placeIdString) {
         return;
       }
+
+      const rentProviderPlaceId: RentProviderPlaceId = JSON.parse(
+        placeIdString
+      ) as RentProviderPlaceId;
+      if (
+        typeof rentProviderPlaceId.providerId !== 'string' ||
+        typeof rentProviderPlaceId.placeId !== 'string'
+      ) {
+        console.error(
+          `Place id in result HTML is bad formatted: ${placeIdString}`
+        );
+        return;
+      }
+
       if (searchResultsTime + SEARCH_RESULT_EXPIRATION_TIME > Date.now()) {
-        // requestBooking(
-        //   placeId,
-        //   searchRequest.checkInDate,
-        //   searchRequest.checkOutDate,
-        //   onRequestBookingComplete
-        // );
+        requestBooking(
+          rentProviderPlaceId,
+          searchRequest.checkInDate,
+          searchRequest.checkOutDate,
+          onRequestBookingComplete
+        );
       } else {
         renderToast(
           {
@@ -176,13 +194,13 @@ interface BookingApiResult {
 }
 
 function requestBooking(
-  placeId: number,
-  checkInDate: string,
-  checkOutDate: string,
+  providerPlaceId: RentProviderPlaceId,
+  checkInDate: Date,
+  checkOutDate: Date,
   onComplete: (result: BookingApiResult, error?: Error) => void
 ) {
   fetch(
-    `http://localhost:3001/booking?placeId=${placeId}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`
+    `http://localhost:3001/booking?placeId=${providerPlaceId.placeId}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`
   )
     .then<BookingApiResult>((response) => {
       // console.log(response);
