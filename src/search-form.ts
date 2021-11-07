@@ -1,4 +1,5 @@
 import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
+import { HomySdk } from './api/homy/homy-sdk.js';
 import { renderBlock } from './lib.js';
 import {
   renderEmptyOrErrorSearchBlock,
@@ -6,6 +7,7 @@ import {
 } from './search-results.js';
 
 const flatRentSdk = new FlatRentSdk();
+const homySdk = new HomySdk();
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,

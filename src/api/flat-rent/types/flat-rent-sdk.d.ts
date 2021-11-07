@@ -18,7 +18,7 @@
     totalPrice: number;
   }
 
-  export type TransactionId = number;
+  export type FlatRentTransactionId = number;
 
   export function cloneDate(date: Date): Date;
 
@@ -47,7 +47,7 @@
       flatId: number,
       checkInDate: Date,
       checkOutDate: Date
-    ) => Promise<TransactionId | Error>;
+    ) => Promise<FlatRentTransactionId | Error>;
 
 
     // /**
@@ -61,7 +61,7 @@
 
     // _generateDateRange: (from: Date, to: Date) => Date[];
 
-    // _generateTransactionId: () => TransactionId;
+    // _generateTransactionId: () => FlatRentTransactionId;
 
     // _areAllDatesAvailable: (flat: DbItem, dateRange: Date[]) => boolean;
 
