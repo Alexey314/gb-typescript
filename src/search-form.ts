@@ -1,4 +1,5 @@
 import { renderBlock } from './lib.js';
+import { renderEmptyOrErrorSearchBlock, renderSearchResultsBlock } from './search-results.js';
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,
@@ -95,7 +96,21 @@ interface SearchFormData {
   maxPrice: number;
 }
 
-function handleSearchForm(): void {
+export interface Place {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  remoteness: number;
+  bookedDates: string[];
+  price: number;
+}
+
+export let searchRequest: SearchFormData;
+export let searchResults: Place[] = [];
+export let searchResultsTime: number;
+
+export function handleSearchForm(): void {
   const getInputTextValueById: (id: string, defaultValue: string) => string = (
     id: string,
     defaultValue: string
@@ -119,24 +134,47 @@ function handleSearchForm(): void {
     maxPrice,
   };
 
-  search(searchFormData, (result)=>{
-    console.log('Search result: ', result);
 
+  search(searchFormData, (result: unknown) => {
+    searchRequest = searchFormData;
+    searchResultsTime = Date.now();
+    if (result instanceof Error)
+    {
+      renderEmptyOrErrorSearchBlock(result.message);
+      searchResults = [];
+    }
+    else
+    {
+      renderSearchResultsBlock(result as Place[]);
+      searchResults = result as Place[];
+    }
+    // console.log('Search result: ', result);
   });
 }
 
-interface Place{
 
-}
 
-function search(searchData: SearchFormData, onComplete: (result: Error|Place[])=>void): void {
-  console.log(searchData);
-  setTimeout(()=>{
-    if (Math.random() > 0.5){
-      onComplete(new Error('Search engine error'));
-    }
-    else{
-      onComplete([]);
-    }
-  }, 3000);
+function search(
+  searchData: SearchFormData,
+  onComplete: (result: Error | Place[]) => void
+): void {
+  // console.log(searchData);
+  fetch(
+    `http://localhost:3001/places?city=${searchData.city}&checkInDate=${searchData.checkInDate}&checkOutDate=${searchData.checkOutDate}&maxPrice=${searchData.maxPrice}`
+  )
+    .then((response) => {
+      // console.log(response);
+      if (response.ok) {
+        return response.json();
+      }
+      throw new Error('Search engine error');
+    })
+    .then((placesObj) => {
+      const places: Place[] = [];
+      for (const key in placesObj) {
+        places.push(placesObj[key]);
+      }
+      onComplete(places);
+    })
+    .catch((error) => onComplete(error));
 }
