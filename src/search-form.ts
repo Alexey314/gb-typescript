@@ -1,7 +1,11 @@
 import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
 import { HomySdk } from './api/homy/homy-sdk.js';
 import { renderBlock } from './lib.js';
-import { RentProviders, RentSearchInfo, RentSearchResult } from './rent-providers.js';
+import {
+  RentProviders,
+  RentSearchInfo,
+  RentSearchResult,
+} from './rent-providers.js';
 import {
   renderEmptyOrErrorSearchBlock,
   renderSearchResultsBlock,
@@ -157,23 +161,29 @@ export function handleSearchForm(): void {
     checkInDate: new Date(checkInDate),
     checkOutDate: new Date(checkOutDate),
     maxPrice,
-    providerIds: selectedProviders
+    providerIds: selectedProviders,
   };
 
-  rentProviders.search(searchFormData).then(results=>{
-    searchRequest = searchFormData;
-    searchResultsTime = Date.now();
-    renderSearchResultsBlock(results);
-    searchResults = results;
-  }).catch(error=>{
-      if (error instanceof Error)
-      {
-        renderEmptyOrErrorSearchBlock(error.message);
+  rentProviders
+    .search(searchFormData)
+    .then((results) => {
+      searchRequest = searchFormData;
+      searchResultsTime = Date.now();
+      if (results.length) {
+        renderSearchResultsBlock(results);
+      } else {
+        renderEmptyOrErrorSearchBlock(
+          'Ничего не найдено. Попробуйте изменить параметры поиска.'
+        );
       }
-      else if (typeof error === 'object')
-      {
+      searchResults = results;
+    })
+    .catch((error) => {
+      if (error instanceof Error) {
+        renderEmptyOrErrorSearchBlock(error.message);
+      } else if (typeof error === 'object') {
         renderEmptyOrErrorSearchBlock(error.toString());
       }
       searchResults = [];
-  });
+    });
 }
