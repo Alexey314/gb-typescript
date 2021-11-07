@@ -1,4 +1,5 @@
 import { renderBlock, renderToast } from './lib.js';
+import { RentSearchResult } from './rent-providers.js';
 import {
   handleSearchForm,
   Place,
@@ -38,7 +39,7 @@ export function renderEmptyOrErrorSearchBlock(reasonMessage: string) {
   );
 }
 
-export function renderSearchResultsBlock(places: Place[]) {
+export function renderSearchResultsBlock(places: RentSearchResult[]) {
   const favoriteItems = getFavoriteItems();
   renderBlock(
     'search-results-block',
@@ -56,14 +57,14 @@ export function renderSearchResultsBlock(places: Place[]) {
     </div>
     <ul class="results-list">
     ${places.reduce<string>(
-      (prev: string, place: Place) =>
+      (prev: string, place: RentSearchResult) =>
         prev +
         `<li class="result">
         <div class="result-container">
           <div class="result-img-container">
             <div class="favorites${
-              isInFavoriteItems(favoriteItems, place.id) ? ' active' : ''
-            } " data-place-id="${place.id}""></div>
+              isInFavoriteItems(favoriteItems, place.providerPlaceId.placeId) ? ' active' : ''
+            } " data-place-id="${place.providerPlaceId.placeId}""></div>
             <img class="result-img" src="${place.image}" alt="">
           </div>
           <div class="result-info">
@@ -78,7 +79,7 @@ export function renderSearchResultsBlock(places: Place[]) {
             <div class="result-info--footer">
               <div>
                 <button name="make-order" data-place-id="${
-                  place.id
+                  place.providerPlaceId.placeId
                 }">Забронировать</button>
               </div>
             </div>
@@ -99,21 +100,16 @@ export function renderSearchResultsBlock(places: Place[]) {
   }
 }
 
-function getPlaceIdFromHtmlElement(element: HTMLElement): number {
+function getPlaceIdFromHtmlElement(element: HTMLElement): string | null {
   const placeIdAttr = element.attributes.getNamedItem('data-place-id');
   if (placeIdAttr === null) {
     console.error(
       'No data-place-id attribute in search result item favorites icon'
     );
-    return NaN;
+    return null;
   }
 
-  const placeId = Number(placeIdAttr.value);
-  if (isNaN(placeId)) {
-    console.error('data-place-id attribute of search result item is NaN');
-  }
-
-  return placeId;
+  return placeIdAttr.value;
 }
 
 function handleSearchResultsClick(event: unknown) {
@@ -124,7 +120,7 @@ function handleSearchResultsClick(event: unknown) {
       event.preventDefault();
 
       const placeId = getPlaceIdFromHtmlElement(target);
-      if (isNaN(placeId)) {
+      if (!placeId) {
         return;
       }
 
@@ -136,16 +132,16 @@ function handleSearchResultsClick(event: unknown) {
     } else if (target.attributes.getNamedItem('name')?.value == 'make-order') {
       event.preventDefault();
       const placeId = getPlaceIdFromHtmlElement(target);
-      if (isNaN(placeId)) {
+      if (!placeId) {
         return;
       }
       if (searchResultsTime + SEARCH_RESULT_EXPIRATION_TIME > Date.now()) {
-        requestBooking(
-          placeId,
-          searchRequest.checkInDate,
-          searchRequest.checkOutDate,
-          onRequestBookingComplete
-        );
+        // requestBooking(
+        //   placeId,
+        //   searchRequest.checkInDate,
+        //   searchRequest.checkOutDate,
+        //   onRequestBookingComplete
+        // );
       } else {
         renderToast(
           {

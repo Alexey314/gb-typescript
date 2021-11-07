@@ -37,7 +37,7 @@
   export interface FlatRentSdk {
     // database: DbItem[];
 
-    get: (id: string) => Promise<Object | null>;
+    get: (id: string) => Promise<FlatRentSearchResult | null>;
 
     search: (
       parameters: FlatRentSearchInfo

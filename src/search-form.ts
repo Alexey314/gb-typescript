@@ -1,13 +1,13 @@
 import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
 import { HomySdk } from './api/homy/homy-sdk.js';
 import { renderBlock } from './lib.js';
+import { RentProviders, RentSearchInfo, RentSearchResult } from './rent-providers.js';
 import {
   renderEmptyOrErrorSearchBlock,
   renderSearchResultsBlock,
 } from './search-results.js';
 
-const flatRentSdk = new FlatRentSdk();
-const homySdk = new HomySdk();
+const rentProviders: RentProviders = new RentProviders();
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,
@@ -114,8 +114,8 @@ export interface Place {
   price: number;
 }
 
-export let searchRequest: SearchFormData;
-export let searchResults: Place[] = [];
+export let searchRequest: RentSearchInfo;
+export let searchResults: RentSearchResult[] = [];
 export let searchResultsTime: number;
 
 export function handleSearchForm(): void {
@@ -152,24 +152,29 @@ export function handleSearchForm(): void {
   const selectedProviders: string[] = getSelectedProviders();
   console.log(selectedProviders);
 
-  const searchFormData: SearchFormData = {
+  const searchFormData: RentSearchInfo = {
     city,
-    checkInDate,
-    checkOutDate,
+    checkInDate: new Date(checkInDate),
+    checkOutDate: new Date(checkOutDate),
     maxPrice,
+    providerIds: selectedProviders
   };
 
-  search(searchFormData, (result: unknown) => {
+  rentProviders.search(searchFormData).then(results=>{
     searchRequest = searchFormData;
     searchResultsTime = Date.now();
-    if (result instanceof Error) {
-      renderEmptyOrErrorSearchBlock(result.message);
+    renderSearchResultsBlock(results);
+    searchResults = results;
+  }).catch(error=>{
+      if (error instanceof Error)
+      {
+        renderEmptyOrErrorSearchBlock(error.message);
+      }
+      else if (typeof error === 'object')
+      {
+        renderEmptyOrErrorSearchBlock(error.toString());
+      }
       searchResults = [];
-    } else {
-      renderSearchResultsBlock(result as Place[]);
-      searchResults = result as Place[];
-    }
-    // console.log('Search result: ', result);
   });
 }
 
