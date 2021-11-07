@@ -41,6 +41,18 @@ export function renderEmptyOrErrorSearchBlock(reasonMessage: string) {
 
 export function renderSearchResultsBlock(places: RentSearchResult[]) {
   const favoriteItems = getFavoriteItems();
+  const getLocationHTML = (place: RentSearchResult) => {
+    if (place.remoteness != null) {
+      return `${place.remoteness} км от вас`;
+    }
+    if (place.coordinates != null) {
+      return `<a href="https://www.google.com/maps/@${place.coordinates[0]},${place.coordinates[1]},20z">
+      ${place.coordinates[0]}, ${place.coordinates[1]}
+      </a>`;
+    }
+    return '';
+  };
+
   renderBlock(
     'search-results-block',
     `
@@ -63,7 +75,9 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
         <div class="result-container">
           <div class="result-img-container">
             <div class="favorites${
-              isInFavoriteItems(favoriteItems, place.providerPlaceId.placeId) ? ' active' : ''
+              isInFavoriteItems(favoriteItems, place.providerPlaceId.placeId)
+                ? ' active'
+                : ''
             } " data-place-id="${place.providerPlaceId.placeId}""></div>
             <img class="result-img" src="${place.image[0]}" alt="">
           </div>
@@ -72,9 +86,8 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
               <p>${place.name}</p>
               <p class="price">${place.price}&#8381;</p>
             </div>
-            <div class="result-info--map"><i class="map-icon"></i> ${
-              place.remoteness
-            }км от вас</div>
+            <div class="result-info--map">
+            <i class="map-icon"></i> ${getLocationHTML(place)}</div>
             <div class="result-info--descr">${place.description}</div>
             <div class="result-info--footer">
               <div>
