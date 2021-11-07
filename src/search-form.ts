@@ -177,28 +177,3 @@ export function handleSearchForm(): void {
       searchResults = [];
   });
 }
-
-function search(
-  searchData: SearchFormData,
-  onComplete: (result: Error | Place[]) => void
-): void {
-  // console.log(searchData);
-  fetch(
-    `http://localhost:3001/places?city=${searchData.city}&checkInDate=${searchData.checkInDate}&checkOutDate=${searchData.checkOutDate}&maxPrice=${searchData.maxPrice}`
-  )
-    .then((response) => {
-      // console.log(response);
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error('Search engine error');
-    })
-    .then((placesObj) => {
-      const places: Place[] = [];
-      for (const key in placesObj) {
-        places.push(placesObj[key]);
-      }
-      onComplete(places);
-    })
-    .catch((error) => onComplete(error));
-}
