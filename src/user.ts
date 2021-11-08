@@ -1,10 +1,9 @@
 import { renderBlock } from './lib.js';
+import { RentSearchResult } from './rent-abstraction.js';
 import {
   parseRentProviderPlaceId,
-  RentProviderPlaceId,
-  RentSearchResult,
 } from './rent-providers.js';
-import { Place, searchResults } from './search-form.js';
+import { searchResults } from './search-form.js';
 
 export function renderUserBlock(
   userName: string,
