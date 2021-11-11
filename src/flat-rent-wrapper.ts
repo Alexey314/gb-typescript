@@ -15,7 +15,7 @@ import {
 export default class FlatRentProvider implements IRentProvider {
   readonly providerId: RentProviderId = 'flat-rent';
   private readonly flatRentSdk: FlatRentSdk = new FlatRentSdk();
-  get(id: RentProviderPlaceId): Promise<RentSearchResult> {
+  get(_id: RentProviderPlaceId): Promise<RentSearchResult> {
     return Promise.reject(null);
   }
   search(parameters: RentSearchInfo) {

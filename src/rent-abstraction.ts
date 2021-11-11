@@ -30,7 +30,7 @@ export type RentProviderTransactionId = {
 };
 
 export interface IRentProvider {
-  get(id: RentProviderPlaceId): Promise<RentSearchResult>;
+  get(id: RentProviderPlaceId): Promise<RentSearchResult | null>;
   search(parameters: RentSearchInfo): Promise<RentSearchResult[]>;
   book(
     placeId: RentProviderPlaceId,

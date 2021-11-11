@@ -11,7 +11,7 @@ import {
 export default class HomyProvider implements IRentProvider {
   readonly providerId: RentProviderId = 'homy';
   private readonly homySdk: HomySdk = new HomySdk();
-  get(id: RentProviderPlaceId): Promise<RentSearchResult> {
+  get(_id: RentProviderPlaceId): Promise<RentSearchResult> {
     return Promise.reject(null);
   }
   search(parameters: RentSearchInfo): Promise<RentSearchResult[]> {
@@ -49,8 +49,8 @@ export default class HomyProvider implements IRentProvider {
 
   book(
     placeId: RentProviderPlaceId,
-    checkInDate: Date,
-    checkOutDate: Date
+    _checkInDate: Date,
+    _checkOutDate: Date
   ): Promise<RentProviderTransactionId | null> {
     if (placeId.providerId !== this.providerId) {
       return Promise.resolve(null);

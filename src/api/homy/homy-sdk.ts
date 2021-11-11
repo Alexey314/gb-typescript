@@ -61,14 +61,14 @@ export type HomySearchInfo = {
 export type HomyTransactionId = number;
 
 export class HomySdk {
-  search(parameters: HomySearchInfo): Promise<HomySearchResult[]> {
+  search(_parameters: HomySearchInfo): Promise<HomySearchResult[]> {
     return Promise.resolve(database);
   }
 
   book(
-    flatId: number,
-    checkInDate: Date,
-    checkOutDate: Date
+    _flatId: number,
+    _checkInDate: Date,
+    _checkOutDate: Date
   ): Promise<HomyTransactionId> {
     return Promise.resolve(0);
   }

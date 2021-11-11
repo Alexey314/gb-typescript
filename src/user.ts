@@ -1,8 +1,6 @@
 import { renderBlock } from './lib.js';
 import { RentSearchResult } from './rent-abstraction.js';
-import {
-  parseRentProviderPlaceId,
-} from './rent-providers.js';
+import { parseRentProviderPlaceId } from './rent-providers.js';
 import { searchResults } from './search-form.js';
 
 export function renderUserBlock(
@@ -24,8 +22,8 @@ export function renderUserBlock(
           <p class="name">${userName}</p>
           <p class="fav">
             <i class="heart-icon${
-              hasFavoriteItems ? ' active' : ''
-            }"></i>${favoritesCaption}
+  hasFavoriteItems ? ' active' : ''
+}"></i>${favoritesCaption}
           </p>
       </div>
     </div>
@@ -34,8 +32,8 @@ export function renderUserBlock(
 }
 
 export class StorageUserKey {
-  username: string;
-  avatarUrl: string;
+  username = '';
+  avatarUrl = '';
 }
 
 export function getUserData(): StorageUserKey {
@@ -47,12 +45,14 @@ export function getUserData(): StorageUserKey {
   const userInfoJson = localStorage.getItem('user');
 
   try {
-    const userInfo = JSON.parse(userInfoJson);
-    if (
-      typeof userInfo.username == 'string' &&
-      typeof userInfo.avatarUrl == 'string'
-    ) {
-      return userInfo as StorageUserKey;
+    if (userInfoJson !== null) {
+      const userInfo = JSON.parse(userInfoJson);
+      if (
+        typeof userInfo.username == 'string' &&
+        typeof userInfo.avatarUrl == 'string'
+      ) {
+        return userInfo as StorageUserKey;
+      }
     }
     return anon;
   } catch (error) {
@@ -129,7 +129,7 @@ export function toggleFavoriteItem(placeId: string): boolean {
       const newFavItem: FavoriteItem = {
         id: placeId,
         name: searchResultsItem.name,
-        image: searchResultsItem.image[0],
+        image: searchResultsItem.image[0] || '',
       };
       favoriteItems.push(newFavItem);
       setFavoriteItems(favoriteItems);
