@@ -2,7 +2,7 @@ import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
 import { HomySdk } from './api/homy/homy-sdk.js';
 import { renderBlock } from './lib.js';
 import {
-  RentProviders,
+  RentProviderComposer,
   RentSearchInfo,
   RentSearchResult,
 } from './rent-providers.js';
@@ -11,7 +11,7 @@ import {
   renderSearchResultsBlock,
 } from './search-results.js';
 
-export const rentProviders: RentProviders = new RentProviders();
+export const rentProviders: RentProviderComposer = new RentProviderComposer();
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,

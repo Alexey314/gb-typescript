@@ -94,17 +94,17 @@ export type RentProviderTransactionId = {
 };
 
 export interface IRentProvider {
-  search: (parameters: RentSearchInfo) => Promise<RentSearchResult[]>;
-  book: (
+  search(parameters: RentSearchInfo): Promise<RentSearchResult[]>;
+  book(
     placeId: RentProviderPlaceId,
     checkInDate: Date,
     checkOutDate: Date
-  ) => Promise<RentProviderTransactionId>;
+  ): Promise<RentProviderTransactionId>;
 }
 
-class HomyWrapper implements IRentProvider {
+class HomyProvider implements IRentProvider {
   static readonly providerId: RentProviderId = 'homy';
-  search(parameters: RentSearchInfo) {
+  search(parameters: RentSearchInfo): Promise<RentSearchResult[]> {
     const homySearchInfo: HomySearchInfo = {
       city: parameters.city,
       checkInDate: parameters.checkInDate,
@@ -118,7 +118,7 @@ class HomyWrapper implements IRentProvider {
         homyPlaces.forEach((homyPlace) =>
           results.push({
             providerPlaceId: {
-              providerId: HomyWrapper.providerId,
+              providerId: HomyProvider.providerId,
               placeId: homyPlace.id.toString(),
             },
             name: homyPlace.name,
@@ -143,7 +143,7 @@ class HomyWrapper implements IRentProvider {
   }
 }
 
-class FlatRentWrapper implements IRentProvider {
+class FlatRentProvider implements IRentProvider {
   static readonly providerId: RentProviderId = 'flat-rent';
   search(parameters: RentSearchInfo) {
     const flatRentSearchInfo: FlatRentSearchInfo = {
@@ -159,7 +159,7 @@ class FlatRentWrapper implements IRentProvider {
         flatRentPlaces.forEach((flatRentPlace: FlatRentSearchResult) =>
           results.push({
             providerPlaceId: {
-              providerId: FlatRentWrapper.providerId,
+              providerId: FlatRentProvider.providerId,
               placeId: flatRentPlace.id.toString(),
             },
             name: flatRentPlace.title,
@@ -194,17 +194,17 @@ class FlatRentWrapper implements IRentProvider {
 
 function createProvider(providerId: RentProviderId): IRentProvider | null {
   switch (providerId) {
-    case HomyWrapper.providerId:
-      return new HomyWrapper();
-    case FlatRentWrapper.providerId:
-      return new FlatRentWrapper();
+    case HomyProvider.providerId:
+      return new HomyProvider();
+    case FlatRentProvider.providerId:
+      return new FlatRentProvider();
     default:
       console.error(`Rent provider '${providerId}' not supported`);
       return null;
   }
 }
 
-export class RentProviders implements IRentProvider {
+export class RentProviderComposer implements IRentProvider {
   search(parameters: RentSearchInfo): Promise<RentSearchResult[]> {
     const providers: IRentProvider[] = [];
     const promises: Promise<RentSearchResult[]>[] = [];

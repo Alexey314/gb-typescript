@@ -2,7 +2,7 @@ import { renderBlock, renderToast } from './lib.js';
 import {
   parseRentProviderPlaceId,
   RentProviderPlaceId,
-  RentProviders,
+  RentProviderComposer,
   RentSearchResult,
   stringifyRentProviderPlaceId,
 } from './rent-providers.js';

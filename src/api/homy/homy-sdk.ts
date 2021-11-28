@@ -62,9 +62,7 @@ export type HomyTransactionId = number;
 
 export class HomySdk {
   search(parameters: HomySearchInfo): Promise<HomySearchResult[]> {
-    return new Promise<HomySearchResult[]>((resolve, reject) => {
-        resolve(database);
-    });
+    return Promise.resolve(database);
   }
 
   book(
@@ -72,8 +70,6 @@ export class HomySdk {
     checkInDate: Date,
     checkOutDate: Date
   ): Promise<HomyTransactionId> {
-    return new Promise<HomyTransactionId>((resolve, reject) => {
-        resolve(0);
-    });
+    return Promise.resolve(0);
   }
 }
