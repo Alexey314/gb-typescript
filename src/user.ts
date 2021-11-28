@@ -1,4 +1,9 @@
 import { renderBlock } from './lib.js';
+import {
+  parseRentProviderPlaceId,
+  RentProviderPlaceId,
+  RentSearchResult,
+} from './rent-providers.js';
 import { Place, searchResults } from './search-form.js';
 
 export function renderUserBlock(
@@ -75,7 +80,7 @@ export function getFavoritesAmount(): number {
 }
 
 interface FavoriteItem {
-  id: number;
+  id: string;
   name: string;
   image: string;
 }
@@ -90,7 +95,7 @@ export function getFavoriteItems(): FavoriteItem[] {
 
 export function isInFavoriteItems(
   items: FavoriteItem[],
-  placeId: number
+  placeId: string
 ): boolean {
   return items.findIndex((item: FavoriteItem) => item.id === placeId) != -1;
 }
@@ -102,22 +107,30 @@ export function setFavoriteItems(items: FavoriteItem[]): void {
   renderUserBlock(userData.username, userData.avatarUrl, items.length);
 }
 
-export function toggleFavoriteItem(placeId: number): boolean {
+export function toggleFavoriteItem(placeId: string): boolean {
   const favoriteItems: FavoriteItem[] = getFavoriteItems();
   const favoriteItemsIndex = favoriteItems.findIndex(
     (item: FavoriteItem) => item.id === placeId
   );
 
+  const providerPlaceId = parseRentProviderPlaceId(placeId);
+
   if (favoriteItemsIndex == -1) {
+    if (providerPlaceId === null) {
+      return false;
+    }
+
     const searchResultsItem = searchResults.find(
-      (item: Place) => item.id === placeId
+      (item: RentSearchResult) =>
+        item.providerPlaceId.placeId === providerPlaceId.placeId &&
+        item.providerPlaceId.providerId === providerPlaceId.providerId
     );
 
     if (searchResultsItem) {
       const newFavItem: FavoriteItem = {
-        id: searchResultsItem.id,
+        id: placeId,
         name: searchResultsItem.name,
-        image: searchResultsItem.image,
+        image: searchResultsItem.image[0],
       };
       favoriteItems.push(newFavItem);
       setFavoriteItems(favoriteItems);

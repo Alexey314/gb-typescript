@@ -1,5 +1,17 @@
+import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
+import { HomySdk } from './api/homy/homy-sdk.js';
 import { renderBlock } from './lib.js';
-import { renderEmptyOrErrorSearchBlock, renderSearchResultsBlock } from './search-results.js';
+import {
+  RentProviderComposer,
+  RentSearchInfo,
+  RentSearchResult,
+} from './rent-providers.js';
+import {
+  renderEmptyOrErrorSearchBlock,
+  renderSearchResultsBlock,
+} from './search-results.js';
+
+export const rentProviders: RentProviderComposer = new RentProviderComposer();
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,
@@ -7,7 +19,7 @@ export function renderSearchFormBlock(
 ): void {
   const today = new Date();
 
-  if (arrivalDate === undefined) {
+  if (!arrivalDate) {
     arrivalDate = new Date(new Date().setDate(today.getDate() + 1));
   } else if (arrivalDate.getTime() < today.getTime()) {
     arrivalDate = today;
@@ -23,7 +35,7 @@ export function renderSearchFormBlock(
     ).getDate()
   );
 
-  if (departureDate === undefined) {
+  if (!departureDate) {
     departureDate = new Date(new Date().setDate(arrivalDate.getDate() + 2));
   } else if (departureDate > lastDepartureDate) {
     departureDate = lastDepartureDate;
@@ -51,10 +63,10 @@ export function renderSearchFormBlock(
             <input id="city" type="text" disabled value="Санкт-Петербург" />
             <input type="hidden" disabled value="59.9386,30.3141" />
           </div>
-          <!--<div class="providers">
+          <div class="providers">
             <label><input type="checkbox" name="provider" value="homy" checked /> Homy</label>
             <label><input type="checkbox" name="provider" value="flat-rent" checked /> FlatRent</label>
-          </div>--!>
+          </div>
         </div>
         <div class="row">
           <div>
@@ -106,8 +118,8 @@ export interface Place {
   price: number;
 }
 
-export let searchRequest: SearchFormData;
-export let searchResults: Place[] = [];
+export let searchRequest: RentSearchInfo;
+export let searchResults: RentSearchResult[] = [];
 export let searchResultsTime: number;
 
 export function handleSearchForm(): void {
@@ -122,59 +134,56 @@ export function handleSearchForm(): void {
     return result;
   };
 
+  const getSelectedProviders: () => string[] = () => {
+    const checkboxList: NodeListOf<Element> = document.querySelectorAll(
+      '#search-form .providers input[name="provider"]'
+    );
+
+    const result: string[] = [];
+    checkboxList.forEach((node) => {
+      if ((node as HTMLInputElement).checked) {
+        result.push((node as HTMLInputElement).value);
+      }
+    });
+
+    return result;
+  };
+
   const city: string = getInputTextValueById('city', '');
   const checkInDate: string = getInputTextValueById('check-in-date', '');
   const checkOutDate: string = getInputTextValueById('check-out-date', '');
   const maxPrice = Number(getInputTextValueById('max-price', ''));
+  const selectedProviders: string[] = getSelectedProviders();
+  console.log(selectedProviders);
 
-  const searchFormData: SearchFormData = {
+  const searchFormData: RentSearchInfo = {
     city,
-    checkInDate,
-    checkOutDate,
+    checkInDate: new Date(checkInDate),
+    checkOutDate: new Date(checkOutDate),
     maxPrice,
+    providerIds: selectedProviders,
   };
 
-
-  search(searchFormData, (result: unknown) => {
-    searchRequest = searchFormData;
-    searchResultsTime = Date.now();
-    if (result instanceof Error)
-    {
-      renderEmptyOrErrorSearchBlock(result.message);
+  rentProviders
+    .search(searchFormData)
+    .then((results) => {
+      searchRequest = searchFormData;
+      searchResultsTime = Date.now();
+      if (results.length) {
+        renderSearchResultsBlock(results);
+      } else {
+        renderEmptyOrErrorSearchBlock(
+          'Ничего не найдено. Попробуйте изменить параметры поиска.'
+        );
+      }
+      searchResults = results;
+    })
+    .catch((error) => {
+      if (error instanceof Error) {
+        renderEmptyOrErrorSearchBlock(error.message);
+      } else if (typeof error === 'object') {
+        renderEmptyOrErrorSearchBlock(error.toString());
+      }
       searchResults = [];
-    }
-    else
-    {
-      renderSearchResultsBlock(result as Place[]);
-      searchResults = result as Place[];
-    }
-    // console.log('Search result: ', result);
-  });
-}
-
-
-
-function search(
-  searchData: SearchFormData,
-  onComplete: (result: Error | Place[]) => void
-): void {
-  // console.log(searchData);
-  fetch(
-    `http://localhost:3001/places?city=${searchData.city}&checkInDate=${searchData.checkInDate}&checkOutDate=${searchData.checkOutDate}&maxPrice=${searchData.maxPrice}`
-  )
-    .then((response) => {
-      // console.log(response);
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error('Search engine error');
-    })
-    .then((placesObj) => {
-      const places: Place[] = [];
-      for (const key in placesObj) {
-        places.push(placesObj[key]);
-      }
-      onComplete(places);
-    })
-    .catch((error) => onComplete(error));
+    });
 }

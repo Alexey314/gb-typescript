@@ -1,7 +1,15 @@
 import { renderBlock, renderToast } from './lib.js';
 import {
+  parseRentProviderPlaceId,
+  RentProviderPlaceId,
+  RentProviderComposer,
+  RentSearchResult,
+  stringifyRentProviderPlaceId,
+} from './rent-providers.js';
+import {
   handleSearchForm,
   Place,
+  rentProviders,
   searchRequest,
   searchResults,
   searchResultsTime,
@@ -38,8 +46,20 @@ export function renderEmptyOrErrorSearchBlock(reasonMessage: string) {
   );
 }
 
-export function renderSearchResultsBlock(places: Place[]) {
+export function renderSearchResultsBlock(places: RentSearchResult[]) {
   const favoriteItems = getFavoriteItems();
+  const getLocationHTML = (place: RentSearchResult): string => {
+    if (place.remoteness != null) {
+      return `${place.remoteness} км от вас`;
+    }
+    if (place.coordinates != null) {
+      return `<a href="https://www.google.com/maps/@${place.coordinates[0]},${place.coordinates[1]},20z">
+      ${place.coordinates[0]}, ${place.coordinates[1]}
+      </a>`;
+    }
+    return '';
+  };
+
   renderBlock(
     'search-results-block',
     `
@@ -55,38 +75,39 @@ export function renderSearchResultsBlock(places: Place[]) {
         </div>
     </div>
     <ul class="results-list">
-    ${places.reduce<string>(
-      (prev: string, place: Place) =>
+    ${places.reduce<string>((prev: string, place: RentSearchResult) => {
+      const placeIdString = stringifyRentProviderPlaceId(place);
+      return (
         prev +
         `<li class="result">
         <div class="result-container">
           <div class="result-img-container">
             <div class="favorites${
-              isInFavoriteItems(favoriteItems, place.id) ? ' active' : ''
-            } " data-place-id="${place.id}""></div>
-            <img class="result-img" src="${place.image}" alt="">
+              isInFavoriteItems(favoriteItems, placeIdString) ? ' active' : ''
+            } " data-place-id="${placeIdString}""></div>
+            <img class="result-img" src="${place.image[0]}" alt="">
           </div>
           <div class="result-info">
             <div class="result-info--header">
               <p>${place.name}</p>
               <p class="price">${place.price}&#8381;</p>
             </div>
-            <div class="result-info--map"><i class="map-icon"></i> ${
-              place.remoteness
-            }км от вас</div>
+            <div class="result-info--map">
+            <i class="map-icon"></i> ${getLocationHTML(place)}</div>
             <div class="result-info--descr">${place.description}</div>
             <div class="result-info--footer">
               <div>
-                <button name="make-order" data-place-id="${
-                  place.id
-                }">Забронировать</button>
+                <button name="make-order"
+                  data-place-id="${placeIdString}">
+                Забронировать
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </li>\n`,
-      ''
-    )}
+      </li>\n`
+      );
+    }, '')}
 
     </ul>
     `
@@ -99,21 +120,16 @@ export function renderSearchResultsBlock(places: Place[]) {
   }
 }
 
-function getPlaceIdFromHtmlElement(element: HTMLElement): number {
+function getPlaceIdFromHtmlElement(element: HTMLElement): string | null {
   const placeIdAttr = element.attributes.getNamedItem('data-place-id');
   if (placeIdAttr === null) {
     console.error(
       'No data-place-id attribute in search result item favorites icon'
     );
-    return NaN;
+    return null;
   }
 
-  const placeId = Number(placeIdAttr.value);
-  if (isNaN(placeId)) {
-    console.error('data-place-id attribute of search result item is NaN');
-  }
-
-  return placeId;
+  return placeIdAttr.value;
 }
 
 function handleSearchResultsClick(event: unknown) {
@@ -124,7 +140,7 @@ function handleSearchResultsClick(event: unknown) {
       event.preventDefault();
 
       const placeId = getPlaceIdFromHtmlElement(target);
-      if (isNaN(placeId)) {
+      if (!placeId) {
         return;
       }
 
@@ -135,17 +151,57 @@ function handleSearchResultsClick(event: unknown) {
       target.classList.toggle('active', inFavorites);
     } else if (target.attributes.getNamedItem('name')?.value == 'make-order') {
       event.preventDefault();
-      const placeId = getPlaceIdFromHtmlElement(target);
-      if (isNaN(placeId)) {
+      const placeIdString = getPlaceIdFromHtmlElement(target);
+      if (!placeIdString) {
         return;
       }
-      if (searchResultsTime + SEARCH_RESULT_EXPIRATION_TIME > Date.now()) {
-        requestBooking(
-          placeId,
-          searchRequest.checkInDate,
-          searchRequest.checkOutDate,
-          onRequestBookingComplete
+
+      const rentProviderPlaceId: RentProviderPlaceId =
+        parseRentProviderPlaceId(placeIdString);
+      if (rentProviderPlaceId === null) {
+        console.error(
+          `Place id in result HTML is bad formatted: ${placeIdString}`
         );
+        return;
+      }
+
+      if (searchResultsTime + SEARCH_RESULT_EXPIRATION_TIME > Date.now()) {
+        rentProviders
+          .book(
+            rentProviderPlaceId,
+            searchRequest.checkInDate,
+            searchRequest.checkOutDate
+          )
+          .then((transactionId) => {
+            renderToast(
+              {
+                text: `Бронирование выполнено успешно! Идентификатор транзакции '${transactionId.transactionId}'`,
+                type: 'success',
+              },
+              {
+                name: 'Закрыть',
+                handler: () => {
+                  // console.log('Уведомление закрыто');
+                },
+              }
+            );
+          })
+          .catch((error) => {
+            renderToast(
+              {
+                text: `Ошибка, бронирование не выполнено! ${
+                  error instanceof Error ? error.message : ''
+                }`,
+                type: 'error',
+              },
+              {
+                name: 'Закрыть',
+                handler: () => {
+                  // console.log('Уведомление закрыто');
+                },
+              }
+            );
+          });
       } else {
         renderToast(
           {
@@ -159,68 +215,5 @@ function handleSearchResultsClick(event: unknown) {
         );
       }
     }
-  }
-}
-
-interface BookingApiResult {
-  status: string;
-}
-
-function requestBooking(
-  placeId: number,
-  checkInDate: string,
-  checkOutDate: string,
-  onComplete: (result: BookingApiResult, error?: Error) => void
-) {
-  fetch(
-    `http://localhost:3001/booking?placeId=${placeId}&checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`
-  )
-    .then<BookingApiResult>((response) => {
-      // console.log(response);
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error('Booking engine error');
-    })
-    .then<void>((result: BookingApiResult) => {
-      if (typeof result.status === 'string') {
-        onComplete(result);
-      } else {
-        throw new Error('Booking engine result format error');
-      }
-    })
-    .catch((error) => onComplete({ status: 'unknown' }, error));
-}
-
-function onRequestBookingComplete(
-  result: BookingApiResult,
-  error?: Error
-): void {
-  if (result.status === 'OK') {
-    renderToast(
-      {
-        text: 'Бронирование выполнено успешно!',
-        type: 'success',
-      },
-      {
-        name: 'Закрыть',
-        handler: () => {
-          // console.log('Уведомление закрыто');
-        },
-      }
-    );
-  } else if (error) {
-    renderToast(
-      {
-        text: `Ошибка, бронирование не выполнено! ${error.message}`,
-        type: 'error',
-      },
-      {
-        name: 'Закрыть',
-        handler: () => {
-          // console.log('Уведомление закрыто');
-        },
-      }
-    );
   }
 }
