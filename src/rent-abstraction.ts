@@ -30,7 +30,7 @@ export type RentProviderTransactionId = {
 };
 
 export interface IRentProvider {
-  get(id: RentProviderPlaceId): Promise<RentSearchResult>;
+  get(id: RentProviderPlaceId): Promise<RentSearchResult | null>;
   search(parameters: RentSearchInfo): Promise<RentSearchResult[]>;
   book(
     placeId: RentProviderPlaceId,
@@ -50,13 +50,8 @@ export class RentProviderCollection {
    * @throws
    */
   remove(child: IRentProvider): void {
-    const index = this.providers.indexOf(child);
-    if (index > -1) {
-      this.providers.splice(index, 1);
-    } else {
-      throw new Error(
-        'Failed to remove provider from coolection: no given provider found.'
-      );
-    }
+    this.providers = this.providers.filter(
+      (item: IRentProvider) => item !== child
+    );
   }
 }

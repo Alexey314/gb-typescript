@@ -39,7 +39,6 @@ function validateSearchResultsSortOptions(
   return SearchResultsSortOptions.CHEAP_FIRST;
 }
 
-
 export let sortSearchResultsBy: SearchResultsSortOptions =
   SearchResultsSortOptions.CHEAP_FIRST;
 
@@ -194,7 +193,7 @@ function handleSearchResultsClick(event: unknown) {
         return;
       }
 
-      const rentProviderPlaceId: RentProviderPlaceId =
+      const rentProviderPlaceId: RentProviderPlaceId | null =
         parseRentProviderPlaceId(placeIdString);
       if (rentProviderPlaceId === null) {
         console.error(
@@ -211,18 +210,20 @@ function handleSearchResultsClick(event: unknown) {
             searchRequest.checkOutDate
           )
           .then((transactionId) => {
-            renderToast(
-              {
-                text: `Бронирование выполнено успешно! Идентификатор транзакции '${transactionId.transactionId}'`,
-                type: 'success',
-              },
-              {
-                name: 'Закрыть',
-                handler: () => {
-                  // console.log('Уведомление закрыто');
+            if (transactionId !== null) {
+              renderToast(
+                {
+                  text: `Бронирование выполнено успешно! Идентификатор транзакции '${transactionId.transactionId}'`,
+                  type: 'success',
                 },
-              }
-            );
+                {
+                  name: 'Закрыть',
+                  handler: () => {
+                    // console.log('Уведомление закрыто');
+                  },
+                }
+              );
+            }
           })
           .catch((error) => {
             renderToast(
@@ -261,23 +262,26 @@ export function renderSortedSearchResultsBlock(
   sortBy: SearchResultsSortOptions
 ): void {
   switch (sortBy) {
-    case SearchResultsSortOptions.CHEAP_FIRST:
-      renderSearchResultsBlock(items.sort((a, b) => a.price - b.price));
-      break;
     case SearchResultsSortOptions.EXPENSIVE_FIRST:
       renderSearchResultsBlock(items.sort((a, b) => b.price - a.price));
       break;
     case SearchResultsSortOptions.NEAREST_FIRST:
       renderSearchResultsBlock(
-        items.sort((a, b) => b.remoteness - a.remoteness)
+        items.sort((a, b) =>
+          b.remoteness !== null && a.remoteness !== null
+            ? b.remoteness - a.remoteness
+            : 0
+        )
       );
       break;
+    case SearchResultsSortOptions.CHEAP_FIRST:
     default:
+      renderSearchResultsBlock(items.sort((a, b) => a.price - b.price));
+      break;
   }
 }
 
-
-function handleSearchResultsChange(event: unknown): void {
+function handleSearchResultsChange(event: Event): void {
   console.log(event);
   if (event instanceof Event && event.target instanceof HTMLSelectElement) {
     event.preventDefault();
