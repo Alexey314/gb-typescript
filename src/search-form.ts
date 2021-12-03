@@ -1,5 +1,5 @@
-import FlatRentProvider from './flat-rent-wrapper.js';
-import HomyProvider from './homy-wrapper.js';
+import { FlatRentProvider } from './flat-rent-provider.js';
+import { HomyProvider } from './homy-provider.js';
 import { renderBlock } from './lib.js';
 import { RentSearchInfo, RentSearchResult } from './rent-abstraction';
 import { RentProviderComposer } from './rent-providers.js';

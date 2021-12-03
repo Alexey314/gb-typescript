@@ -12,14 +12,14 @@ import {
   RentSearchResult,
 } from './rent-abstraction';
 
-export default class FlatRentProvider implements IRentProvider {
+export class FlatRentProvider implements IRentProvider {
   readonly providerId: RentProviderId = 'flat-rent';
   private readonly flatRentSdk: FlatRentSdk = new FlatRentSdk();
   get(_id: RentProviderPlaceId): Promise<RentSearchResult> {
     return Promise.reject(null);
   }
   search(parameters: RentSearchInfo) {
-    if (!parameters.providerIds.some(id=>id === this.providerId)){
+    if (!parameters.providerIds.some((id) => id === this.providerId)) {
       return Promise.resolve([]);
     }
     const flatRentSearchInfo: FlatRentSearchInfo = {
@@ -31,9 +31,8 @@ export default class FlatRentProvider implements IRentProvider {
     return this.flatRentSdk
       .search(flatRentSearchInfo)
       .then<RentSearchResult[]>((flatRentPlaces: FlatRentSearchResult[]) => {
-        const results: RentSearchResult[] = [];
-        flatRentPlaces.forEach((flatRentPlace: FlatRentSearchResult) =>
-          results.push({
+        const results: RentSearchResult[] = flatRentPlaces.map(
+          (flatRentPlace: FlatRentSearchResult) => ({
             providerPlaceId: {
               providerId: this.providerId,
               placeId: flatRentPlace.id.toString(),
@@ -55,7 +54,7 @@ export default class FlatRentProvider implements IRentProvider {
     checkInDate: Date,
     checkOutDate: Date
   ): Promise<RentProviderTransactionId | null> {
-    if (placeId.providerId !== this.providerId){
+    if (placeId.providerId !== this.providerId) {
       return Promise.resolve(null);
     }
 

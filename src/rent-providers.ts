@@ -50,7 +50,10 @@ export function parseRentProviderPlaceId(
 ): RentProviderPlaceId | null {
   try {
     const obj = JSON.parse(b64DecodeUnicode(stringToParse));
-    if (Object.prototype.hasOwnProperty.call(obj, 'providerId') && Object.prototype.hasOwnProperty.call(obj, 'placeId')) {
+    if (
+      Object.prototype.hasOwnProperty.call(obj, 'providerId') &&
+      Object.prototype.hasOwnProperty.call(obj, 'placeId')
+    ) {
       return obj as RentProviderPlaceId;
     }
   } catch (error) {
@@ -70,10 +73,9 @@ export class RentProviderComposer
   }
 
   get(id: RentProviderPlaceId): Promise<RentSearchResult | null> {
-    const promises: Promise<RentSearchResult | null>[] = [];
-    this.providers.forEach((provider) => {
-      promises.push(provider.get(id));
-    });
+    const promises: Promise<RentSearchResult | null>[] = this.providers.map(
+      (provider) => provider.get(id)
+    );
     return Promise.all<RentSearchResult | null>(promises).then(
       (allProvidersResults) => {
         console.log(allProvidersResults);
@@ -86,10 +88,9 @@ export class RentProviderComposer
   }
 
   search(parameters: RentSearchInfo): Promise<RentSearchResult[]> {
-    const promises: Promise<RentSearchResult[]>[] = [];
-    this.providers.forEach((provider) => {
-      promises.push(provider.search(parameters));
-    });
+    const promises: Promise<RentSearchResult[]>[] = this.providers.map(
+      (provider) => provider.search(parameters)
+    );
     return Promise.all<RentSearchResult[]>(promises).then(
       (allProvidersResults) => {
         console.log(allProvidersResults);
@@ -103,10 +104,10 @@ export class RentProviderComposer
     checkInDate: Date,
     checkOutDate: Date
   ): Promise<RentProviderTransactionId | null> {
-    const promises: Promise<RentProviderTransactionId | null>[] = [];
-    this.providers.forEach((provider) => {
-      promises.push(provider.book(placeId, checkInDate, checkOutDate));
-    });
+    const promises: Promise<RentProviderTransactionId | null>[] =
+      this.providers.map((provider) =>
+        provider.book(placeId, checkInDate, checkOutDate)
+      );
     return Promise.all<RentProviderTransactionId | null>(promises).then(
       (allProvidersResults) => {
         console.log(allProvidersResults);
@@ -114,12 +115,12 @@ export class RentProviderComposer
           .concat(...allProvidersResults)
           .filter((result) => result !== null);
         switch (result.length) {
-        case 0:
-          return Promise.reject(new Error('Unsupported provider'));
-        case 1:
-          return result[0] || null;
-        default:
-          return Promise.reject(new Error('Booked multiple provider'));
+          case 0:
+            return Promise.reject(new Error('Unsupported provider'));
+          case 1:
+            return result[0] || null;
+          default:
+            return Promise.reject(new Error('Booked multiple provider'));
         }
       }
     );

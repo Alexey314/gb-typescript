@@ -8,7 +8,7 @@ import {
   RentSearchResult,
 } from './rent-abstraction';
 
-export default class HomyProvider implements IRentProvider {
+export class HomyProvider implements IRentProvider {
   readonly providerId: RentProviderId = 'homy';
   private readonly homySdk: HomySdk = new HomySdk();
   get(_id: RentProviderPlaceId): Promise<RentSearchResult> {
@@ -27,22 +27,19 @@ export default class HomyProvider implements IRentProvider {
     return this.homySdk
       .search(homySearchInfo)
       .then<RentSearchResult[]>((homyPlaces) => {
-        const results: RentSearchResult[] = [];
-        homyPlaces.forEach((homyPlace) =>
-          results.push({
-            providerPlaceId: {
-              providerId: this.providerId,
-              placeId: homyPlace.id.toString(),
-            },
-            name: homyPlace.name,
-            description: homyPlace.description,
-            image: [homyPlace.image],
-            remoteness: homyPlace.remoteness,
-            coordinates: null,
-            bookedDates: homyPlace.bookedDates,
-            price: homyPlace.price,
-          })
-        );
+        const results: RentSearchResult[] = homyPlaces.map((homyPlace) => ({
+          providerPlaceId: {
+            providerId: this.providerId,
+            placeId: homyPlace.id.toString(),
+          },
+          name: homyPlace.name,
+          description: homyPlace.description,
+          image: [homyPlace.image],
+          remoteness: homyPlace.remoteness,
+          coordinates: null,
+          bookedDates: homyPlace.bookedDates,
+          price: homyPlace.price,
+        }));
         return results;
       });
   }

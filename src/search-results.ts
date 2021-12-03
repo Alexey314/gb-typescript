@@ -29,12 +29,12 @@ function validateSearchResultsSortOptions(
   sortBy: string
 ): SearchResultsSortOptions {
   switch (sortBy) {
-  case SearchResultsSortOptions.CHEAP_FIRST:
-    return SearchResultsSortOptions.CHEAP_FIRST;
-  case SearchResultsSortOptions.EXPENSIVE_FIRST:
-    return SearchResultsSortOptions.EXPENSIVE_FIRST;
-  case SearchResultsSortOptions.NEAREST_FIRST:
-    return SearchResultsSortOptions.NEAREST_FIRST;
+    case SearchResultsSortOptions.CHEAP_FIRST:
+      return SearchResultsSortOptions.CHEAP_FIRST;
+    case SearchResultsSortOptions.EXPENSIVE_FIRST:
+      return SearchResultsSortOptions.EXPENSIVE_FIRST;
+    case SearchResultsSortOptions.NEAREST_FIRST:
+      return SearchResultsSortOptions.NEAREST_FIRST;
   }
   return SearchResultsSortOptions.CHEAP_FIRST;
 }
@@ -90,37 +90,37 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
             <select>
                 <option value="${SearchResultsSortOptions.CHEAP_FIRST}"
                 ${
-  sortSearchResultsBy === SearchResultsSortOptions.CHEAP_FIRST
-    ? 'selected="selected"'
-    : ''
-}>Сначала дешёвые</option>
+                  sortSearchResultsBy === SearchResultsSortOptions.CHEAP_FIRST
+                    ? 'selected="selected"'
+                    : ''
+                }>Сначала дешёвые</option>
                 <option value="${SearchResultsSortOptions.EXPENSIVE_FIRST}"
                 ${
-  sortSearchResultsBy ===
+                  sortSearchResultsBy ===
                   SearchResultsSortOptions.EXPENSIVE_FIRST
-    ? 'selected="selected"'
-    : ''
-}>Сначала дорогие</option>
+                    ? 'selected="selected"'
+                    : ''
+                }>Сначала дорогие</option>
                 <option value="${SearchResultsSortOptions.NEAREST_FIRST}"
                 ${
-  sortSearchResultsBy === SearchResultsSortOptions.NEAREST_FIRST
-    ? 'selected="selected"'
-    : ''
-}>Сначала ближе</option>
+                  sortSearchResultsBy === SearchResultsSortOptions.NEAREST_FIRST
+                    ? 'selected="selected"'
+                    : ''
+                }>Сначала ближе</option>
             </select>
         </div>
     </div>
     <ul class="results-list">
     ${places.reduce<string>((prev: string, place: RentSearchResult) => {
-  const placeIdString = stringifyRentProviderPlaceId(place);
-  return (
-    prev +
+      const placeIdString = stringifyRentProviderPlaceId(place);
+      return (
+        prev +
         `<li class="result">
         <div class="result-container">
           <div class="result-img-container">
             <div class="favorites${
-    isInFavoriteItems(favoriteItems, placeIdString) ? ' active' : ''
-    } " data-place-id="${placeIdString}""></div>
+              isInFavoriteItems(favoriteItems, placeIdString) ? ' active' : ''
+            } " data-place-id="${placeIdString}""></div>
             <img class="result-img" src="${place.image[0]}" alt="">
           </div>
           <div class="result-info">
@@ -142,8 +142,8 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
           </div>
         </div>
       </li>\n`
-  );
-}, '')}
+      );
+    }, '')}
 
     </ul>
     `
@@ -262,26 +262,26 @@ export function renderSortedSearchResultsBlock(
   sortBy: SearchResultsSortOptions
 ): void {
   switch (sortBy) {
-  case SearchResultsSortOptions.CHEAP_FIRST:
-    renderSearchResultsBlock(items.sort((a, b) => a.price - b.price));
-    break;
-  case SearchResultsSortOptions.EXPENSIVE_FIRST:
-    renderSearchResultsBlock(items.sort((a, b) => b.price - a.price));
-    break;
-  case SearchResultsSortOptions.NEAREST_FIRST:
-    renderSearchResultsBlock(
-      items.sort((a, b) =>
-        b.remoteness !== null && a.remoteness !== null
-          ? b.remoteness - a.remoteness
-          : 0
-      )
-    );
-    break;
-  default:
+    case SearchResultsSortOptions.EXPENSIVE_FIRST:
+      renderSearchResultsBlock(items.sort((a, b) => b.price - a.price));
+      break;
+    case SearchResultsSortOptions.NEAREST_FIRST:
+      renderSearchResultsBlock(
+        items.sort((a, b) =>
+          b.remoteness !== null && a.remoteness !== null
+            ? b.remoteness - a.remoteness
+            : 0
+        )
+      );
+      break;
+    case SearchResultsSortOptions.CHEAP_FIRST:
+    default:
+      renderSearchResultsBlock(items.sort((a, b) => a.price - b.price));
+      break;
   }
 }
 
-function handleSearchResultsChange(event: unknown): void {
+function handleSearchResultsChange(event: Event): void {
   console.log(event);
   if (event instanceof Event && event.target instanceof HTMLSelectElement) {
     event.preventDefault();
