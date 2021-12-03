@@ -1,14 +1,11 @@
 import { renderBlock, renderToast } from './lib.js';
+import { RentProviderPlaceId, RentSearchResult } from './rent-abstraction.js';
 import {
   parseRentProviderPlaceId,
-  RentProviderPlaceId,
-  RentProviderComposer,
-  RentSearchResult,
   stringifyRentProviderPlaceId,
 } from './rent-providers.js';
 import {
   handleSearchForm,
-  Place,
   rentProviders,
   searchRequest,
   searchResults,
@@ -21,6 +18,30 @@ import {
 } from './user.js';
 
 const SEARCH_RESULT_EXPIRATION_TIME = 5 * 60 * 1000;
+
+export const enum SearchResultsSortOptions {
+  CHEAP_FIRST = 'cheap-first',
+  EXPENSIVE_FIRST = 'expensive-first',
+  NEAREST_FIRST = 'nearest-first',
+}
+
+function validateSearchResultsSortOptions(
+  sortBy: string
+): SearchResultsSortOptions {
+  switch (sortBy) {
+    case SearchResultsSortOptions.CHEAP_FIRST:
+      return SearchResultsSortOptions.CHEAP_FIRST;
+    case SearchResultsSortOptions.EXPENSIVE_FIRST:
+      return SearchResultsSortOptions.EXPENSIVE_FIRST;
+    case SearchResultsSortOptions.NEAREST_FIRST:
+      return SearchResultsSortOptions.NEAREST_FIRST;
+  }
+  return SearchResultsSortOptions.CHEAP_FIRST;
+}
+
+
+export let sortSearchResultsBy: SearchResultsSortOptions =
+  SearchResultsSortOptions.CHEAP_FIRST;
 
 export function renderSearchStubBlock() {
   renderBlock(
@@ -68,9 +89,25 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
         <div class="search-results-filter">
             <span><i class="icon icon-filter"></i> Сортировать:</span>
             <select>
-                <option selected="">Сначала дешёвые</option>
-                <option selected="">Сначала дорогие</option>
-                <option>Сначала ближе</option>
+                <option value="${SearchResultsSortOptions.CHEAP_FIRST}"
+                ${
+                  sortSearchResultsBy === SearchResultsSortOptions.CHEAP_FIRST
+                    ? 'selected="selected"'
+                    : ''
+                }>Сначала дешёвые</option>
+                <option value="${SearchResultsSortOptions.EXPENSIVE_FIRST}"
+                ${
+                  sortSearchResultsBy ===
+                  SearchResultsSortOptions.EXPENSIVE_FIRST
+                    ? 'selected="selected"'
+                    : ''
+                }>Сначала дорогие</option>
+                <option value="${SearchResultsSortOptions.NEAREST_FIRST}"
+                ${
+                  sortSearchResultsBy === SearchResultsSortOptions.NEAREST_FIRST
+                    ? 'selected="selected"'
+                    : ''
+                }>Сначала ближе</option>
             </select>
         </div>
     </div>
@@ -117,6 +154,7 @@ export function renderSearchResultsBlock(places: RentSearchResult[]) {
 
   if (searchResultsBlock) {
     searchResultsBlock.addEventListener('click', handleSearchResultsClick);
+    searchResultsBlock.addEventListener('change', handleSearchResultsChange);
   }
 }
 
@@ -215,5 +253,37 @@ function handleSearchResultsClick(event: unknown) {
         );
       }
     }
+  }
+}
+
+export function renderSortedSearchResultsBlock(
+  items: RentSearchResult[],
+  sortBy: SearchResultsSortOptions
+): void {
+  switch (sortBy) {
+    case SearchResultsSortOptions.CHEAP_FIRST:
+      renderSearchResultsBlock(items.sort((a, b) => a.price - b.price));
+      break;
+    case SearchResultsSortOptions.EXPENSIVE_FIRST:
+      renderSearchResultsBlock(items.sort((a, b) => b.price - a.price));
+      break;
+    case SearchResultsSortOptions.NEAREST_FIRST:
+      renderSearchResultsBlock(
+        items.sort((a, b) => b.remoteness - a.remoteness)
+      );
+      break;
+    default:
+  }
+}
+
+
+function handleSearchResultsChange(event: unknown): void {
+  console.log(event);
+  if (event instanceof Event && event.target instanceof HTMLSelectElement) {
+    event.preventDefault();
+    const select = event.target as HTMLSelectElement;
+    const sortBy = validateSearchResultsSortOptions(select.value);
+    sortSearchResultsBy = sortBy;
+    renderSortedSearchResultsBlock(searchResults, sortBy);
   }
 }

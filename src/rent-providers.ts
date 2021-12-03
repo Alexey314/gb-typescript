@@ -1,27 +1,11 @@
-import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
 import {
-  FlatRentSearchInfo,
-  FlatRentSearchResult,
-} from './api/flat-rent/flat-rent-sdk';
-import { HomySdk, HomySearchInfo } from './api/homy/homy-sdk.js';
-
-const flatRentSdk = new FlatRentSdk();
-const homySdk = new HomySdk();
-
-export type RentSearchInfo = {
-  city: string;
-  checkInDate: Date;
-  checkOutDate: Date;
-  maxPrice: number;
-  providerIds: string[];
-};
-
-export type RentProviderId = string;
-
-export type RentProviderPlaceId = {
-  providerId: RentProviderId;
-  placeId: string;
-};
+  IRentProvider,
+  RentProviderCollection,
+  RentProviderPlaceId,
+  RentProviderTransactionId,
+  RentSearchInfo,
+  RentSearchResult,
+} from './rent-abstraction.js';
 
 function b64EncodeUnicode(str: string) {
   // first we use encodeURIComponent to get percent-encoded UTF-8,
@@ -77,148 +61,27 @@ export function parseRentProviderPlaceId(
   return null;
 }
 
-export type RentSearchResult = {
-  providerPlaceId: RentProviderPlaceId;
-  name: string;
-  description: string;
-  image: string[];
-  remoteness: number | null;
-  coordinates: [number, number] | null;
-  bookedDates: string[];
-  price: number;
-};
+export class RentProviderComposer
+  extends RentProviderCollection
+  implements IRentProvider
+{
+  constructor() {
+    super();
+  }
 
-export type RentProviderTransactionId = {
-  providerId: RentProviderId;
-  transactionId: string;
-};
+  get(id: RentProviderPlaceId): Promise<RentSearchResult> {
+    return null;
+  }
 
-export interface IRentProvider {
-  search(parameters: RentSearchInfo): Promise<RentSearchResult[]>;
-  book(
-    placeId: RentProviderPlaceId,
-    checkInDate: Date,
-    checkOutDate: Date
-  ): Promise<RentProviderTransactionId>;
-}
-
-class HomyProvider implements IRentProvider {
-  static readonly providerId: RentProviderId = 'homy';
   search(parameters: RentSearchInfo): Promise<RentSearchResult[]> {
-    const homySearchInfo: HomySearchInfo = {
-      city: parameters.city,
-      checkInDate: parameters.checkInDate,
-      checkOutDate: parameters.checkOutDate,
-      priceLimit: parameters.maxPrice,
-    };
-    return homySdk
-      .search(homySearchInfo)
-      .then<RentSearchResult[]>((homyPlaces) => {
-        const results: RentSearchResult[] = [];
-        homyPlaces.forEach((homyPlace) =>
-          results.push({
-            providerPlaceId: {
-              providerId: HomyProvider.providerId,
-              placeId: homyPlace.id.toString(),
-            },
-            name: homyPlace.name,
-            description: homyPlace.description,
-            image: [homyPlace.image],
-            remoteness: homyPlace.remoteness,
-            coordinates: null,
-            bookedDates: homyPlace.bookedDates,
-            price: homyPlace.price,
-          })
-        );
-        return results;
-      });
-  }
-
-  book(
-    placeId: RentProviderPlaceId,
-    checkInDate: Date,
-    checkOutDate: Date
-  ): Promise<RentProviderTransactionId> {
-    return Promise.reject(null);
-  }
-}
-
-class FlatRentProvider implements IRentProvider {
-  static readonly providerId: RentProviderId = 'flat-rent';
-  search(parameters: RentSearchInfo) {
-    const flatRentSearchInfo: FlatRentSearchInfo = {
-      city: parameters.city,
-      checkInDate: parameters.checkInDate,
-      checkOutDate: parameters.checkOutDate,
-      priceLimit: parameters.maxPrice,
-    };
-    return flatRentSdk
-      .search(flatRentSearchInfo)
-      .then<RentSearchResult[]>((flatRentPlaces: FlatRentSearchResult[]) => {
-        const results: RentSearchResult[] = [];
-        flatRentPlaces.forEach((flatRentPlace: FlatRentSearchResult) =>
-          results.push({
-            providerPlaceId: {
-              providerId: FlatRentProvider.providerId,
-              placeId: flatRentPlace.id.toString(),
-            },
-            name: flatRentPlace.title,
-            description: flatRentPlace.details,
-            image: flatRentPlace.photos,
-            remoteness: null,
-            coordinates: flatRentPlace.coordinates,
-            bookedDates: flatRentPlace.bookedDates,
-            price: flatRentPlace.totalPrice,
-          })
-        );
-        return results;
-      });
-  }
-
-  book(
-    placeId: RentProviderPlaceId,
-    checkInDate: Date,
-    checkOutDate: Date
-  ): Promise<RentProviderTransactionId> {
-    return flatRentSdk
-      .book(placeId.placeId, checkInDate, checkOutDate)
-      .then<RentProviderTransactionId>((transactionId) => {
-        const rentProviderTransactionId: RentProviderTransactionId = {
-          providerId: placeId.providerId,
-          transactionId: transactionId.toString(),
-        };
-        return rentProviderTransactionId;
-      });
-  }
-}
-
-function createProvider(providerId: RentProviderId): IRentProvider | null {
-  switch (providerId) {
-    case HomyProvider.providerId:
-      return new HomyProvider();
-    case FlatRentProvider.providerId:
-      return new FlatRentProvider();
-    default:
-      console.error(`Rent provider '${providerId}' not supported`);
-      return null;
-  }
-}
-
-export class RentProviderComposer implements IRentProvider {
-  search(parameters: RentSearchInfo): Promise<RentSearchResult[]> {
-    const providers: IRentProvider[] = [];
     const promises: Promise<RentSearchResult[]>[] = [];
-    parameters.providerIds.forEach((id) => {
-      const provider: IRentProvider | null = createProvider(id);
-      if (provider) {
-        providers.push(provider);
-        promises.push(provider.search(parameters));
-      }
+    this.providers.forEach((provider) => {
+      promises.push(provider.search(parameters));
     });
     return Promise.all<RentSearchResult[]>(promises).then(
-      (allPrividersResults) => {
-        console.log(allPrividersResults);
-        return [].concat(...allPrividersResults);
+      (allProvidersResults) => {
+        console.log(allProvidersResults);
+        return [].concat(...allProvidersResults);
       }
     );
   }
@@ -227,11 +90,22 @@ export class RentProviderComposer implements IRentProvider {
     placeId: RentProviderPlaceId,
     checkInDate: Date,
     checkOutDate: Date
-  ): Promise<RentProviderTransactionId> {
-    const provider = createProvider(placeId.providerId);
-    if (provider === null) {
-      return Promise.reject(new Error('Unsupported provider'));
-    }
-    return provider.book(placeId, checkInDate, checkOutDate);
+  ): Promise<RentProviderTransactionId | null> {
+    const promises: Promise<RentProviderTransactionId>[] = [];
+    this.providers.forEach((provider) => {
+      promises.push(provider.book(placeId, checkInDate, checkOutDate));
+    });
+    return Promise.all<RentProviderTransactionId>(promises).then(
+      (allProvidersResults) => {
+        console.log(allProvidersResults);
+        const result = [].concat(...allProvidersResults).filter(result=>result !== null);
+        switch (result.length)
+        {
+          case 0: return Promise.reject(new Error('Unsupported provider'));
+          case 1: return result[0];
+          default: return Promise.reject(new Error('Booked multiple provider'));
+        }
+      }
+    );
   }
 }

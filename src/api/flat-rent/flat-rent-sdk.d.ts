@@ -34,7 +34,7 @@ export type FlatRentSearchInfo = {
   priceLimit: number;
 };
 
-export class FlatRentSdk {
+export declare class FlatRentSdk {
 
   constructor();
 
@@ -47,5 +47,4 @@ export class FlatRentSdk {
     checkInDate: Date,
     checkOutDate: Date
   ): Promise<FlatRentTransactionId>;
-
 }

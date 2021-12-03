@@ -1,17 +1,17 @@
-import { FlatRentSdk } from './api/flat-rent/flat-rent-sdk.js';
-import { HomySdk } from './api/homy/homy-sdk.js';
+import FlatRentProvider from './flat-rent-wrapper.js';
+import HomyProvider from './homy-wrapper.js';
 import { renderBlock } from './lib.js';
-import {
-  RentProviderComposer,
-  RentSearchInfo,
-  RentSearchResult,
-} from './rent-providers.js';
+import { RentSearchInfo, RentSearchResult } from './rent-abstraction';
+import { RentProviderComposer } from './rent-providers.js';
 import {
   renderEmptyOrErrorSearchBlock,
-  renderSearchResultsBlock,
+  renderSortedSearchResultsBlock,
+  sortSearchResultsBy,
 } from './search-results.js';
 
 export const rentProviders: RentProviderComposer = new RentProviderComposer();
+rentProviders.add(new HomyProvider());
+rentProviders.add(new FlatRentProvider());
 
 export function renderSearchFormBlock(
   arrivalDate?: Date,
@@ -101,13 +101,6 @@ export function renderSearchFormBlock(
   }
 }
 
-interface SearchFormData {
-  city: string;
-  checkInDate: string;
-  checkOutDate: string;
-  maxPrice: number;
-}
-
 export interface Place {
   id: number;
   name: string;
@@ -170,7 +163,7 @@ export function handleSearchForm(): void {
       searchRequest = searchFormData;
       searchResultsTime = Date.now();
       if (results.length) {
-        renderSearchResultsBlock(results);
+        renderSortedSearchResultsBlock(results, sortSearchResultsBy);
       } else {
         renderEmptyOrErrorSearchBlock(
           'Ничего не найдено. Попробуйте изменить параметры поиска.'
